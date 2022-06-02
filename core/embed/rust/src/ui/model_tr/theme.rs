@@ -1,6 +1,7 @@
 use crate::ui::{
     component::text::layout::DefaultTextTheme,
     display::{Color, Font},
+    model_tr::component::{LoaderStyle, LoaderStyleSheet},
 };
 
 use super::component::{ButtonStyle, ButtonStyleSheet};
@@ -17,6 +18,9 @@ pub const BLACK: Color = Color::rgb(0, 0, 0);
 pub const GREY_LIGHT: Color = WHITE; // Word/page break characters.
 pub const FG: Color = WHITE; // Default foreground (text & icon) color.
 pub const BG: Color = BLACK; // Default background color.
+
+pub const ICON_SUCCESS: &[u8] = include_res!("model_tr/res/success.toif");
+pub const ICON_FAIL: &[u8] = include_res!("model_tr/res/fail.toif");
 
 pub fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
@@ -44,6 +48,16 @@ pub fn button_cancel() -> ButtonStyleSheet {
             font: FONT_BOLD,
             text_color: BG,
             border_horiz: false,
+        },
+    }
+}
+
+pub fn loader_default() -> LoaderStyleSheet {
+    LoaderStyleSheet {
+        normal: &LoaderStyle {
+            font: FONT_NORMAL,
+            fg_color: FG,
+            bg_color: BG,
         },
     }
 }

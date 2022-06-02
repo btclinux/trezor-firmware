@@ -61,6 +61,7 @@ fn prepare_bindings() -> bindgen::Builder {
         "-I../../../crypto",
         "-I../../../storage",
         "-I../../vendor/micropython",
+        "-I../../vendor/micropython/lib/uzlib",
         "-I../extmod/modtrezorui", // for display.h
         format!("-DTREZOR_MODEL_{}", model()).as_str(),
     ]);
@@ -253,6 +254,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("storage_next_counter")
         // display
         .allowlist_function("display_init")
+        .allowlist_function("display_offset")
         .allowlist_function("display_refresh")
         .allowlist_function("display_backlight")
         .allowlist_function("display_text")
@@ -267,8 +269,12 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_pixeldata")
         .allowlist_function("display_pixeldata_dirty")
         .allowlist_function("display_set_window")
+        .allowlist_function("display_get_glyph")
         .allowlist_var("DISPLAY_CMD_ADDRESS")
         .allowlist_var("DISPLAY_DATA_ADDRESS")
+        // uzlib
+        .allowlist_function("uzlib_uncompress_init")
+        .allowlist_function("uzlib_uncompress")
         // bip39
         .allowlist_function("mnemonic_word_completion_mask")
         .allowlist_var("BIP39_WORDLIST_ENGLISH")

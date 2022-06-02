@@ -35,6 +35,13 @@ pub fn char_width(ch: char, font: i32) -> i32 {
     text_width(encoding, font)
 }
 
+pub fn get_char_glyph(ch: char, font: i32) -> *const u8 {
+    let mut buf = [0u8; 4];
+    let _ = ch.encode_utf8(&mut buf);
+
+    unsafe { ffi::display_get_glyph(font, buf[0]) }
+}
+
 pub fn text_height(font: i32) -> i32 {
     unsafe { ffi::display_text_height(font) }
 }
@@ -138,5 +145,14 @@ pub fn pixeldata_dirty() {
 pub fn set_window(x0: u16, y0: u16, x1: u16, y1: u16) {
     unsafe {
         ffi::display_set_window(x0, y0, x1, y1);
+    }
+}
+
+pub fn get_offset() -> (i32, i32) {
+    unsafe {
+        let mut x = [0; 1];
+        let mut y = [0; 1];
+        ffi::display_offset(ptr::null_mut(), x.as_mut_ptr(), y.as_mut_ptr());
+        (x[0], y[0])
     }
 }
