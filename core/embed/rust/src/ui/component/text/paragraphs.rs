@@ -1,9 +1,9 @@
 use heapless::Vec;
 
 use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Paginate},
+    component::{Component, Event, EventCtx, LabelStyle, Never, Paginate},
     display::Font,
-    geometry::{Dimensions, Insets, LinearPlacement, Rect},
+    geometry::{Alignment, Dimensions, Insets, LinearPlacement, Rect},
 };
 
 use super::layout::{DefaultTextTheme, LayoutFit, TextLayout};
@@ -53,14 +53,25 @@ where
         self
     }
 
-    pub fn add<D: DefaultTextTheme>(mut self, text_font: Font, content: T) -> Self {
+    pub fn add<D: DefaultTextTheme>(self, text_font: Font, content: T) -> Self {
+        let style = LabelStyle {
+            font: text_font,
+            text_color: TextLayout::new::<D>().text_color,
+            background_color: TextLayout::new::<D>().background_color,
+        };
+        self.add_styled::<D>(style, content)
+    }
+
+    pub fn add_styled<D: DefaultTextTheme>(mut self, style: LabelStyle, content: T) -> Self {
         if content.as_ref().is_empty() {
             return self;
         }
         let paragraph = Paragraph::new(
             content,
             TextLayout {
-                text_font,
+                text_font: style.font,
+                text_color: style.text_color,
+                background_color: style.background_color,
                 padding_top: PARAGRAPH_TOP_SPACE,
                 padding_bottom: PARAGRAPH_BOTTOM_SPACE,
                 ..TextLayout::new::<D>()
@@ -70,6 +81,13 @@ where
             #[cfg(feature = "ui_debug")]
             panic!("paragraph list is full");
         }
+        self
+    }
+
+    pub fn centered(mut self) -> Self {
+        if let Some(ref mut para) = self.list.last_mut() {
+            para.layout.align = Alignment::Center;
+        };
         self
     }
 
