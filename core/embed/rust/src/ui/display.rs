@@ -197,15 +197,15 @@ pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct TextOverlay {
+pub struct TextOverlay<T> {
     colortable: [Color; 16],
     area: Rect,
-    text: &'static str,
+    text: T,
     font: Font,
 }
 
-impl TextOverlay {
-    pub fn new(bg_color: Color, fg_color: Color, text: &'static str, font: Font) -> Self {
+impl<T: AsRef<str>> TextOverlay<T> {
+    pub fn new(bg_color: Color, fg_color: Color, text: T, font: Font) -> Self {
         let area = Rect::zero();
         Self {
             colortable: get_color_table(fg_color, bg_color),
@@ -215,9 +215,13 @@ impl TextOverlay {
         }
     }
 
+    pub fn set_text(&mut self, text: T) {
+        self.text = text;
+    }
+
     // baseline relative to the underlying render area
     pub fn place(&mut self, baseline: Offset) {
-        let text_width = self.font.text_width(self.text);
+        let text_width = self.font.text_width(self.text.as_ref());
         let text_height = self.font.text_height();
 
         let bl_left = baseline - Offset::x(text_width / 2);
@@ -236,7 +240,7 @@ impl TextOverlay {
             let x_t = x - self.area.x0;
             let y_t = y - self.area.y0;
 
-            for c in self.text.chars() {
+            for c in self.text.as_ref().chars() {
                 if let Some(g) = self.font.get_glyph(c) {
                     let w = g.get_width();
                     let h = g.get_height();
@@ -461,9 +465,9 @@ pub fn rect_rounded2_get_pixel(
     }
 }
 
-pub fn bar_with_text_and_fill(
+pub fn bar_with_text_and_fill<T: AsRef<str>>(
     area: Rect,
-    overlay: Option<TextOverlay>,
+    overlay: Option<&TextOverlay<T>>,
     fg_color: Color,
     bg_color: Color,
     fill_from: i32,

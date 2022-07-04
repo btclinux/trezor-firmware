@@ -20,19 +20,19 @@ enum State {
     Grown,
 }
 
-pub struct Loader {
+pub struct Loader<T> {
     area: Rect,
     state: State,
     growing_duration: Duration,
     shrinking_duration: Duration,
-    text: display::TextOverlay,
+    text_overlay: display::TextOverlay<T>,
     styles: LoaderStyleSheet,
 }
 
-impl Loader {
+impl<T: AsRef<str>> Loader<T> {
     pub const SIZE: Offset = Offset::new(120, 120);
 
-    pub fn new(text: &'static str, styles: LoaderStyleSheet) -> Self {
+    pub fn new(text: T, styles: LoaderStyleSheet) -> Self {
         let overlay = display::TextOverlay::new(
             styles.normal.bg_color,
             styles.normal.fg_color,
@@ -45,9 +45,22 @@ impl Loader {
             state: State::Initial,
             growing_duration: Duration::from_millis(1000),
             shrinking_duration: Duration::from_millis(500),
-            text: overlay,
+            text_overlay: overlay,
             styles,
         }
+    }
+
+    pub fn with_growing_duration(mut self, growing_duration: Duration) -> Self {
+        self.growing_duration = growing_duration;
+        self
+    }
+
+    pub fn set_duration(&mut self, growing_duration: Duration) {
+        self.growing_duration = growing_duration;
+    }
+
+    pub fn set_text(&mut self, text: T) {
+        self.text_overlay.set_text(text);
     }
 
     pub fn start_growing(&mut self, ctx: &mut EventCtx, now: Instant) {
@@ -122,7 +135,7 @@ impl Loader {
 
         display::bar_with_text_and_fill(
             self.area,
-            Some(self.text),
+            Some(&self.text_overlay),
             style.fg_color,
             style.bg_color,
             -1,
@@ -131,13 +144,13 @@ impl Loader {
     }
 }
 
-impl Component for Loader {
+impl<T: AsRef<str>> Component for Loader<T> {
     type Msg = LoaderMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
         let baseline = Offset::new(bounds.width() / 2 + 1, bounds.height() - 1);
-        self.text.place(baseline);
+        self.text_overlay.place(baseline);
         self.area
     }
 
@@ -198,7 +211,7 @@ pub struct LoaderStyle {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Loader {
+impl<T: AsRef<str>> crate::trace::Trace for Loader<T> {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
         d.open("Loader");
         d.close();
