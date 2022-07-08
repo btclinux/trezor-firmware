@@ -62,6 +62,16 @@ pub fn loader_default() -> LoaderStyleSheet {
     }
 }
 
+pub fn loader_bold() -> LoaderStyleSheet {
+    LoaderStyleSheet {
+        normal: &LoaderStyle {
+            font: FONT_BOLD,
+            fg_color: FG,
+            bg_color: BG,
+        },
+    }
+}
+
 pub struct TRDefaultText;
 
 impl DefaultTextTheme for TRDefaultText {
