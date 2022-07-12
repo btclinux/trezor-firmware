@@ -187,6 +187,7 @@ async def _prompt_number(
                 )
             )
         )
+        num_input.request_complete_repaint()
 
 
 async def slip39_prompt_threshold(
