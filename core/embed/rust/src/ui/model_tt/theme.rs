@@ -73,6 +73,22 @@ pub fn label_default() -> LabelStyle {
     }
 }
 
+pub fn label_checklist_selected() -> LabelStyle {
+    LabelStyle {
+        font: FONT_BOLD,
+        text_color: FG,
+        background_color: BG,
+    }
+}
+
+pub fn label_checklist_done() -> LabelStyle {
+    LabelStyle {
+        font: FONT_NORMAL,
+        text_color: GREEN,
+        background_color: BG,
+    }
+}
+
 pub fn label_keyboard() -> LabelStyle {
     LabelStyle {
         font: FONT_MEDIUM,
@@ -303,6 +319,38 @@ pub fn button_pin() -> ButtonStyleSheet {
         },
         disabled: &ButtonStyle {
             font: FONT_MONO,
+            text_color: GREY_LIGHT,
+            button_color: GREY_DARK,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
+}
+
+pub fn button_counter() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: FONT_MEDIUM,
+            text_color: FG,
+            button_color: GREY_DARK,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: FONT_MEDIUM,
+            text_color: FG,
+            button_color: GREY_MEDIUM,
+            background_color: BG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: FONT_MEDIUM,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
             background_color: BG,

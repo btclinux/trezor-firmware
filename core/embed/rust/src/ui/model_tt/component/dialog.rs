@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{text::paragraphs::Paragraphs, Child, Component, Event, EventCtx, Image, Never},
-    geometry::{Grid, Insets, LinearPlacement, Rect},
+    geometry::{Insets, LinearPlacement, Rect},
 };
 
 use super::{theme, Button};
@@ -71,14 +71,11 @@ pub struct DialogLayout {
 
 impl DialogLayout {
     pub fn middle(area: Rect) -> Self {
-        let grid = Grid::new(area, 5, 1);
-        Self {
-            content: Rect::new(
-                grid.row_col(0, 0).top_left(),
-                grid.row_col(3, 0).bottom_right(),
-            ),
-            controls: grid.row_col(4, 0),
-        }
+        let (content, controls) = area.split_bottom(Button::<&str>::HEIGHT);
+        let content = content
+            .inset(Insets::bottom(theme::BUTTON_SPACING))
+            .inset(Insets::left(theme::CONTENT_BORDER));
+        Self { content, controls }
     }
 }
 
