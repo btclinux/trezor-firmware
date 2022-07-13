@@ -1,5 +1,7 @@
 use super::ffi;
+use crate::ui::geometry::Offset;
 use core::ptr;
+use cty::c_int;
 
 pub struct ToifInfo {
     pub width: u16,
@@ -144,11 +146,11 @@ pub fn set_window(x0: u16, y0: u16, x1: u16, y1: u16) {
     }
 }
 
-pub fn get_offset() -> (i32, i32) {
+pub fn get_offset() -> Offset {
     unsafe {
-        let mut x = [0; 1];
-        let mut y = [0; 1];
-        ffi::display_offset(ptr::null_mut(), x.as_mut_ptr(), y.as_mut_ptr());
-        (x[0], y[0])
+        let mut x: c_int = 0;
+        let mut y: c_int = 0;
+        ffi::display_offset(ptr::null_mut(), &mut x, &mut y);
+        Offset::new(x as i32, y as i32)
     }
 }
