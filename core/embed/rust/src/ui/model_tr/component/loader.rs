@@ -33,7 +33,7 @@ impl<T: AsRef<str>> Loader<T> {
     pub const SIZE: Offset = Offset::new(120, 120);
 
     pub fn new(text: T, styles: LoaderStyleSheet) -> Self {
-        let overlay = display::TextOverlay::new(
+        let text_overlay = display::TextOverlay::new(
             styles.normal.bg_color,
             styles.normal.fg_color,
             text,
@@ -45,7 +45,7 @@ impl<T: AsRef<str>> Loader<T> {
             state: State::Initial,
             growing_duration: Duration::from_millis(1000),
             shrinking_duration: Duration::from_millis(500),
-            text_overlay: overlay,
+            text_overlay,
             styles,
         }
     }
@@ -55,12 +55,19 @@ impl<T: AsRef<str>> Loader<T> {
         self
     }
 
+    /// Change the duration of the loader.
     pub fn set_duration(&mut self, growing_duration: Duration) {
         self.growing_duration = growing_duration;
     }
 
+    /// Change the text of the loader.
     pub fn set_text(&mut self, text: T) {
         self.text_overlay.set_text(text);
+    }
+
+    /// Return width of given text according to current style.
+    pub fn get_text_width(&self, text: &T) -> i32 {
+        self.styles.normal.font.text_width(text.as_ref())
     }
 
     pub fn start_growing(&mut self, ctx: &mut EventCtx, now: Instant) {
