@@ -1,42 +1,64 @@
 use super::ffi;
-use core::ptr;
+use core::{marker::PhantomData, mem::MaybeUninit, ptr};
 
 pub const UZLIB_WINDOW_SIZE: usize = 1 << 10;
 pub use ffi::uzlib_uncomp;
 
 impl Default for ffi::uzlib_uncomp {
     fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
+        unsafe { MaybeUninit::<Self>::zeroed().assume_init() }
     }
 }
 
-pub fn uzlib_prepare(
-    decomp: &mut uzlib_uncomp,
-    window: Option<&mut [u8]>,
-    src: &[u8],
-    dest: &mut [u8],
-) {
-    unsafe {
-        decomp.source = src.as_ptr();
-        decomp.source_limit = src.as_ptr().add(src.len());
-        decomp.dest = dest.as_mut_ptr();
-        decomp.dest_limit = dest.as_mut_ptr().add(dest.len());
+pub struct UzlibContext<'a, 'b> {
+    uncomp: ffi::uzlib_uncomp,
+    src_data: PhantomData<&'a [u8]>,
+    window: Option<[u8; UZLIB_WINDOW_SIZE]>,
+    dest_buf: &'b mut [u8],
+}
 
-        if let Some(w) = window {
-            ffi::uzlib_uncompress_init(decomp, w.as_ptr() as _, w.len() as u32);
+impl<'a, 'b> UzlibContext<'a, 'b> {
+    pub fn new(src: &'a [u8], use_window: bool, dest_buf: &'b mut [u8]) -> Self {
+        let window = if use_window {
+            Some([0_u8; UZLIB_WINDOW_SIZE])
         } else {
-            ffi::uzlib_uncompress_init(decomp, ptr::null_mut(), 0);
-        }
-    }
-}
+            None
+        };
 
-pub fn uzlib_uncompress(decomp: &mut uzlib_uncomp, dest: &mut [u8]) -> i32 {
-    unsafe {
-        decomp.dest = dest.as_mut_ptr();
-        ffi::uzlib_uncompress(decomp as _)
+        let mut ctx = Self {
+            uncomp: uzlib_uncomp::default(),
+            src_data: Default::default(),
+            window,
+            dest_buf,
+        };
+
+        unsafe {
+            ctx.uncomp.source = src.as_ptr();
+            ctx.uncomp.source_limit = src.as_ptr().add(src.len());
+            ctx.uncomp.dest = ctx.dest_buf.as_mut_ptr();
+            ctx.uncomp.dest_limit = ctx.dest_buf.as_mut_ptr().add(ctx.dest_buf.len());
+
+            if let Some(w) = ctx.window {
+                ffi::uzlib_uncompress_init(&mut ctx.uncomp, w.as_ptr() as _, w.len() as u32);
+            } else {
+                ffi::uzlib_uncompress_init(&mut ctx.uncomp, ptr::null_mut(), 0);
+            }
+        }
+
+        ctx
+    }
+
+    pub fn uncompress(&mut self) -> Result<&mut [u8], ()> {
+        self.uncomp.dest = self.dest_buf.as_mut_ptr();
+
+        unsafe {
+            let res = ffi::uzlib_uncompress(&mut self.uncomp);
+
+            if res == 0 {
+                Ok(self.dest_buf)
+            } else {
+                Err(())
+            }
+        }
     }
 }
