@@ -3,18 +3,9 @@ use crate::{
     time::Duration,
     trezorhal::{display, display::get_offset, time, uzlib},
 };
-use core::cmp::{max, min};
 
 use super::geometry::{Offset, Point, Rect};
 
-pub fn clamp_coords(r: Rect) -> Rect {
-    let x0 = max(r.x0, 0);
-    let y0 = max(r.y0, 0);
-    let x1 = min(r.x1, constant::WIDTH);
-    let y1 = min(r.y1, constant::HEIGHT);
-
-    Rect::new(Point::new(x0, y0), Point::new(x1, y1))
-}
 pub fn backlight() -> i32 {
     display::backlight(-1)
 }
@@ -110,7 +101,7 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     );
 
     let area = r.translate(get_offset());
-    let clamped = clamp_coords(area);
+    let clamped = area.clamp(constant::screen());
     let colortable = get_color_table(fg_color, bg_color);
 
     set_window(clamped);
@@ -297,7 +288,7 @@ pub fn rect_rounded2_partial(
     const MAX_ICON_SIZE: u16 = 64;
 
     let r = area.translate(get_offset());
-    let clamped = clamp_coords(r);
+    let clamped = r.clamp(constant::screen());
 
     set_window(clamped);
 
@@ -320,7 +311,7 @@ pub fn rect_rounded2_partial(
                 center,
                 Offset::new(toif_info.width.into(), toif_info.height.into()),
             );
-            icon_area_clamped = clamp_coords(icon_area);
+            icon_area_clamped = icon_area.clamp(constant::screen());
 
             let mut ctx = uzlib::UzlibContext::new(&i.0[12..], false, &mut icon_data);
             if let Ok(_data) = ctx.uncompress() {};
@@ -457,7 +448,7 @@ pub fn bar_with_text_and_fill(
     fill_to: i32,
 ) {
     let r = area.translate(get_offset());
-    let clamped = clamp_coords(r);
+    let clamped = r.clamp(constant::screen());
     let colortable = get_color_table(fg_color, bg_color);
 
     set_window(clamped);
@@ -644,7 +635,7 @@ impl Glyph {
         let r = Rect::from_top_left_and_size(pos_adj, size);
 
         let area = r.translate(get_offset());
-        let window = clamp_coords(area);
+        let window = area.clamp(constant::screen());
 
         set_window(window);
 

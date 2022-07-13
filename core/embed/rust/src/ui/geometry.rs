@@ -1,4 +1,7 @@
-use core::ops::{Add, Sub};
+use core::{
+    cmp::{max, min},
+    ops::{Add, Sub},
+};
 
 /// Relative offset in 2D space, used for representing translation and
 /// dimensions of objects. Absolute positions on the screen are represented by
@@ -295,6 +298,15 @@ impl Rect {
 
     pub fn split_right(self, width: i32) -> (Self, Self) {
         self.split_left(self.width() - width)
+    }
+
+    pub fn clamp(self, limit: Rect) -> Self {
+        Self {
+            x0: max(self.x0, limit.x0),
+            y0: max(self.y0, limit.y0),
+            x1: min(self.x1, limit.x1),
+            y1: min(self.y1, limit.y1),
+        }
     }
 
     pub fn translate(&self, offset: Offset) -> Self {
