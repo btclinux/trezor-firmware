@@ -25,7 +25,7 @@ pub struct Loader {
     state: State,
     growing_duration: Duration,
     shrinking_duration: Duration,
-    text: display::TextOverlay,
+    text: display::TextOverlay<'static>,
     styles: LoaderStyleSheet,
 }
 

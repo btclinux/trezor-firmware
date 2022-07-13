@@ -168,15 +168,15 @@ pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct TextOverlay {
+pub struct TextOverlay<'a> {
     colortable: [Color; 16],
     area: Rect,
-    text: &'static str,
+    text: &'a str,
     font: Font,
 }
 
-impl TextOverlay {
-    pub fn new(bg_color: Color, fg_color: Color, text: &'static str, font: Font) -> Self {
+impl<'a> TextOverlay<'a> {
+    pub fn new(bg_color: Color, fg_color: Color, text: &'a str, font: Font) -> Self {
         let area = Rect::zero();
         Self {
             colortable: get_color_table(fg_color, bg_color),
