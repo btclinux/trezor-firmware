@@ -3,6 +3,7 @@ use crate::{
     time::Duration,
     trezorhal::{display, display::get_offset, time, uzlib},
 };
+use core::slice;
 
 use super::geometry::{Offset, Point, Rect};
 
@@ -606,25 +607,30 @@ pub struct Glyph {
     adv: i32,
     bearing_x: i32,
     bearing_y: i32,
-    data: *const u8,
+    data: &'static [u8],
 }
 
 impl Glyph {
-    pub fn new(
-        width: i32,
-        height: i32,
-        adv: i32,
-        bearing_x: i32,
-        bearing_y: i32,
-        data: *const u8,
-    ) -> Self {
-        Glyph {
-            width,
-            height,
-            adv,
-            bearing_x,
-            bearing_y,
-            data,
+    /// Construct a `Glyph` from a raw pointer.
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because the caller has to guarantee that `data`
+    /// is pointing to a memory containing a valid glyph data, that is:
+    /// - contains valid glyph metadata
+    /// - data has appropriate size
+    pub unsafe fn load(data: *const u8) -> Self {
+        unsafe {
+            let width = *data.offset(0) as i32;
+            let height = *data.offset(1) as i32;
+            Glyph {
+                width,
+                height,
+                adv: *data.offset(2) as i32,
+                bearing_x: *data.offset(3) as i32,
+                bearing_y: *data.offset(4) as i32,
+                data: slice::from_raw_parts(data.offset(5), (width * height) as usize),
+            }
         }
     }
 
@@ -652,31 +658,23 @@ impl Glyph {
     }
 
     pub fn unpack_bpp1(&self, a: i32) -> u8 {
-        unsafe {
-            let c_data = self.data.offset((a / 8) as isize);
-            ((*c_data >> (7 - (a % 8))) & 0x01) * 15
-        }
+        let c_data = self.data[(a / 8) as usize];
+        ((c_data >> (7 - (a % 8))) & 0x01) * 15
     }
 
     pub fn unpack_bpp2(&self, a: i32) -> u8 {
-        unsafe {
-            let c_data = self.data.offset((a / 4) as isize);
-            ((*c_data >> (6 - (a % 4) * 2)) & 0x03) * 5
-        }
+        let c_data = self.data[(a / 4) as usize];
+        ((c_data >> (6 - (a % 4) * 2)) & 0x03) * 5
     }
 
     pub fn unpack_bpp4(&self, a: i32) -> u8 {
-        unsafe {
-            let c_data = self.data.offset((a / 2) as isize);
-            (*c_data >> (4 - (a % 2) * 4)) & 0x0F
-        }
+        let c_data = self.data[(a / 2) as usize];
+        (c_data >> (4 - (a % 2) * 4)) & 0x0F
     }
 
     pub fn unpack_bpp8(&self, a: i32) -> u8 {
-        unsafe {
-            let c_data = self.data.offset((a) as isize);
-            *c_data >> 4
-        }
+        let c_data = self.data[a as usize];
+        c_data >> 4
     }
 
     pub fn get_advance(&self) -> i32 {
@@ -738,16 +736,7 @@ impl Font {
         if gl_data.is_null() {
             return None;
         }
-
-        unsafe {
-            let width = *gl_data.offset(0) as i32;
-            let height = *gl_data.offset(1) as i32;
-            let adv = *gl_data.offset(2) as i32;
-            let bearing_x = *gl_data.offset(3) as i32;
-            let bearing_y = *gl_data.offset(4) as i32;
-            let data = gl_data.offset(5);
-            Some(Glyph::new(width, height, adv, bearing_x, bearing_y, data))
-        }
+        unsafe { Some(Glyph::load(gl_data)) }
     }
 
     pub fn display_text(
