@@ -170,7 +170,6 @@ impl<'a> TextOverlay<'a> {
         }
     }
 
-    // baseline relative to the underlying render area
     pub fn place(&mut self, baseline: Offset) {
         let text_width = self.font.text_width(self.text);
         let text_height = self.font.text_height();
