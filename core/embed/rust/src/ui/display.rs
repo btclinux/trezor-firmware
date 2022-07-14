@@ -634,8 +634,8 @@ impl Glyph {
     }
 
     pub fn print(&self, pos: Point, colortable: [Color; 16]) -> i32 {
-        let bearing = Offset::new(self.bearing_x as i32, -(self.bearing_y as i32));
-        let size = Offset::new((self.width) as i32, (self.height) as i32);
+        let bearing = Offset::new(self.bearing_x, -self.bearing_y);
+        let size = Offset::new(self.width, self.height);
         let pos_adj = pos + bearing;
         let r = Rect::from_top_left_and_size(pos_adj, size);
 
