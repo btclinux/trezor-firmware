@@ -738,13 +738,7 @@ impl Font {
         unsafe { Some(Glyph::load(gl_data)) }
     }
 
-    pub fn display_text(
-        self,
-        text: &'static str,
-        baseline: Point,
-        fg_color: Color,
-        bg_color: Color,
-    ) {
+    pub fn display_text(self, text: &str, baseline: Point, fg_color: Color, bg_color: Color) {
         let colortable = get_color_table(fg_color, bg_color);
         let mut adv_total = 0;
         for c in text.chars() {
