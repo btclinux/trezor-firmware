@@ -201,7 +201,7 @@ impl<'a> TextOverlay<'a> {
                     if x_t >= (tot_adv + b_x)
                         && x_t < (tot_adv + b_x + w)
                         && y_t >= (h - b_y)
-                        && y_t <= (b_y)
+                        && y_t < (b_y)
                     {
                         //position is for this char
                         let overlay_data = g.get_pixel_data(x_t - tot_adv - b_x, y_t - (h - b_y));
