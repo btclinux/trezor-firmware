@@ -110,7 +110,7 @@ where
             paragraphs: Paragraphs::new()
                 .with_placement(
                     LinearPlacement::vertical()
-                        .align_at_start()
+                        .align_at_center()
                         .with_spacing(Self::VALUE_SPACE),
                 )
                 .add_styled::<theme::TTDefaultText>(theme::label_warning(), title)
@@ -129,8 +129,8 @@ where
         self
     }
 
-    pub const ICON_AREA_HEIGHT: i32 = 64;
-    pub const DESCRIPTION_SPACE: i32 = 14;
+    pub const ICON_AREA_PADDING: i32 = 2;
+    pub const ICON_AREA_HEIGHT: i32 = 60;
     pub const VALUE_SPACE: i32 = 5;
 }
 
@@ -142,10 +142,11 @@ where
     type Msg = DialogMsg<Never, U::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let bounds = bounds.inset(theme::borders());
+        let bounds = bounds
+            .inset(theme::borders())
+            .inset(Insets::top(Self::ICON_AREA_PADDING));
         let (content, buttons) = bounds.split_bottom(Button::<&str>::HEIGHT);
         let (image, content) = content.split_top(Self::ICON_AREA_HEIGHT);
-        let content = content.inset(Insets::top(Self::DESCRIPTION_SPACE));
 
         self.image.place(image);
         self.paragraphs.place(content);
