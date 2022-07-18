@@ -332,6 +332,7 @@ if TYPE_CHECKING:
         TXORIGINPUT = 5
         TXORIGOUTPUT = 6
         TXPAYMENTREQ = 7
+        TXORCHARDOUTPUT = 8
 
     class CardanoDerivationType(IntEnum):
         LEDGER = 0

@@ -15,3 +15,73 @@ enum ZcashReceiverTypecode {
   SAPLING = 2;
   ORCHARD = 3;
 }
+
+/**
+ * Request: Ask device for Orchard Full Viewing Key.
+ * @start
+ * @next Failure
+ * @next ZcashFullViewingKey
+ */
+message ZcashGetFullViewingKey {
+    optional string coin_name = 2 [default = "Zcash"];
+    repeated uint32 z_address_n = 3; // z-address ZIP 32 path
+}
+
+/**
+ * Response: Contains raw Orchard Full Viewing Key.
+ * @end
+ */
+message ZcashFullViewingKey {
+    required bytes fvk = 1;
+}
+
+/**
+ * Request: Ask device for Orchard Incoming Viewing Key.
+ * @start
+ * @next Failure
+ * @next ZcashIncomingViewingKey
+ */
+message ZcashGetIncomingViewingKey {
+    optional string coin_name = 1 [default = "Zcash"];
+    repeated uint32 z_address_n = 2; // z-address ZIP 32 path
+}
+
+/**
+ * Response: Contains raw Orchard Incoming Viewing Key.
+ * @end
+ */
+message ZcashIncomingViewingKey {
+    required bytes ivk = 1;
+}
+
+/**
+ * Request: Ask device for Unified Address.
+ * @start
+ * @next Failure
+ * @next ZcashAddress
+ */
+message ZcashGetAddress {
+    optional string coin_name = 1 [default = "Zcash"];
+    repeated uint32 t_address_n = 2;                      // t-address BIP 32 path (P2PKH)
+    repeated uint32 z_address_n = 3;                      // z-address ZIP 32 path (Orchard)
+    optional uint64 diversifier_index = 4 [default = 0];  // z-address diversifier index
+    optional bool   show_display = 5 [default = false];   // Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains Zcash diversified payment address derived from device private seed
+ * @end
+ */
+message ZcashAddress {
+    optional string address = 1;
+}
+
+/**
+ * Request: Specify tx output. Let the `address` field empty for change outputs.
+ * @next TxRequest
+ */
+message ZcashOrchardOutput {
+    optional string address = 1;  // for outgoing transfers
+    required uint64 amount = 2;
+    optional bytes memo = 3;      // an optional message for a recepient
+}
