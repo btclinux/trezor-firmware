@@ -12,6 +12,9 @@ pub const FONT_MEDIUM: Font = Font::new(-5);
 pub const FONT_BOLD: Font = Font::new(-2);
 pub const FONT_MONO: Font = Font::new(-3);
 
+pub const FONT_BUTTON: Font = FONT_MONO;
+pub const FONT_HEADER: Font = FONT_MONO;
+
 // Color palette.
 pub const WHITE: Color = Color::rgb(255, 255, 255);
 pub const BLACK: Color = Color::rgb(0, 0, 0);
@@ -25,12 +28,12 @@ pub const ICON_FAIL: &[u8] = include_res!("model_tr/res/fail.toif");
 pub fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: FONT_BOLD,
+            font: FONT_BUTTON,
             text_color: BG,
             border_horiz: true,
         },
         active: &ButtonStyle {
-            font: FONT_BOLD,
+            font: FONT_BUTTON,
             text_color: FG,
             border_horiz: true,
         },
@@ -40,12 +43,12 @@ pub fn button_default() -> ButtonStyleSheet {
 pub fn button_cancel() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: FONT_BOLD,
+            font: FONT_BUTTON,
             text_color: FG,
             border_horiz: false,
         },
         active: &ButtonStyle {
-            font: FONT_BOLD,
+            font: FONT_BUTTON,
             text_color: BG,
             border_horiz: false,
         },
