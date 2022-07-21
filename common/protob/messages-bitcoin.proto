@@ -203,9 +203,9 @@ message SignTx {
      * Informations about shielded part of a Zcash transaction.
      */
     message ZcashOrchardBundleInfo {
-        required uint32 outputs_count = 1;  // number of shielded transaction outputs
-        required uint32 inputs_count = 2;   // number of shielded transaction inputs
-        required bytes anchor = 3;          // a root of Orchard Merkle tree. See the specification § 3.4 .
+        required uint32 outputs_count = 1;  // number of Orchard outputs
+        required uint32 action_count = 2;   // number of Orchard Actions (see protocol §3.7)
+        required bytes anchor = 3;          // a root of Orchard Merkle tree (see protocol §3.4)
         optional bool enable_spends = 4 [default = true];
         optional bool enable_outputs = 5 [default = true];
         required sint64 bundle_balance = 6;  // sum of orchard inputs minus sum of orchard outputs

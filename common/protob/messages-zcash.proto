@@ -17,6 +17,14 @@ enum ZcashReceiverTypecode {
 }
 
 /**
+ * Type of Orchard Viewing Key.
+ */
+enum ZcashViewingKeyScope {
+    EXTERNAL = 0;  // for extenal operations like receiving funds from other users
+    INTERNAL = 1;  // for internal operations like change transfers
+}
+
+/**
  * Request: Ask device for Orchard Full Viewing Key.
  * @start
  * @next Failure
@@ -83,5 +91,25 @@ message ZcashAddress {
 message ZcashOrchardOutput {
     optional string address = 1;  // for outgoing transfers
     required uint64 amount = 2;
-    optional bytes memo = 3;      // an optional message for a recepient
+    optional string memo = 3;     // an optional message for a recepient
+    optional bytes  mac = 4;      // Message Authorization Code for resending this message 
+}
+
+/**
+ * Request: Specify Orchard Action description.
+ * @next TxRequest
+ */
+message ZcashActionDescription {
+    required bytes nf = 1;  // nullifier
+    required bytes cv = 2;  // value commitment
+    required bytes rk = 3;  // verification key
+    required ZcashOrchardOutput output = 4;  // Action output info
+}
+
+/**
+ * Request: Specify alpha to randomize signing keys.
+ * @next TxRequest
+ */
+message ZcashSignOrchard {
+    required bytes alpha = 1;
 }

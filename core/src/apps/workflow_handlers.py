@@ -183,6 +183,15 @@ def find_message_handler_module(msg_type: int) -> str:
         if msg_type == MessageType.BinanceSignTx:
             return "apps.binance.sign_tx"
 
+    if utils.USE_ZCASH:
+        # zcash
+        if msg_type == MessageType.ZcashGetFullViewingKey:
+            return "apps.zcash.orchard.get_fvk"
+        if msg_type == MessageType.ZcashGetIncomingViewingKey:
+            return "apps.zcash.orchard.get_ivk"
+        if msg_type == MessageType.ZcashGetAddress:
+            return "apps.zcash.get_address"
+
     raise ValueError
 
 

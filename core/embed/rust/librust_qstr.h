@@ -68,4 +68,23 @@ static void _librust_qstrs(void) {
   MP_QSTR_total_amount;
   MP_QSTR_total_fee_new;
   MP_QSTR_user_fee_change;
+
+  // Zcash keys
+  MP_QSTR_seed;
+  MP_QSTR_coin_type;
+  MP_QSTR_account;
+  MP_QSTR_diversifier_index;
+
+  // Zcash shielding
+  MP_QSTR_fvk;
+  MP_QSTR_ovk;
+
+  MP_QSTR_address;
+  MP_QSTR_value;
+  MP_QSTR_memo;
+
+  MP_QSTR_cmx;
+  MP_QSTR_epk;
+  MP_QSTR_enc_ciphertext;
+  MP_QSTR_out_ciphertext;
 }

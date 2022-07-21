@@ -1,6 +1,6 @@
 """
 Implementation of Zcash txid and sighash algorithms
-according to the ZIP-0244.
+according to the ZIP-244.
 
 specification: https://zips.z.cash/zip-0244
 """
@@ -56,7 +56,6 @@ class ZcashHasher:
     def txid_digest(self) -> bytes:
         """
         Returns the transaction identifier.
-
         see: https://zips.z.cash/zip-0244#id4
         """
         h = HashWriter(blake2b(outlen=32, personal=self.tx_hash_person))
@@ -73,7 +72,6 @@ class ZcashHasher:
     ) -> bytes:
         """
         Returns the transaction signature digest.
-
         see: https://zips.z.cash/zip-0244#id13
         """
         h = HashWriter(blake2b(outlen=32, personal=self.tx_hash_person))
@@ -139,7 +137,6 @@ class HeaderHasher:
     def digest(self) -> bytes:
         """
         Returns `T.1: header_digest` field.
-
         see: https://zips.z.cash/zip-0244#t-1-header-digest
         """
         return self._digest
@@ -185,7 +182,6 @@ class TransparentHasher:
     def digest(self) -> bytes:
         """
         Returns `T.2: transparent_digest` field for txid computation.
-
         see: https://zips.z.cash/zip-0244#t-2-transparent-digest
         """
         h = HashWriter(blake2b(outlen=32, personal=b"ZTxIdTranspaHash"))
@@ -205,7 +201,6 @@ class TransparentHasher:
         """
         Returns `S.2: transparent_sig_digest` field for signature
         digest computation.
-
         see: https://zips.z.cash/zip-0244#s-2-transparent-sig-digest
         """
 
@@ -234,7 +229,6 @@ def _txin_sig_digest(
 ) -> bytes:
     """
     Returns `S.2g: txin_sig_digest` field for signature digest computation.
-
     see: https://zips.z.cash/zip-0244#s-2g-txin-sig-digest
     """
 
@@ -252,28 +246,62 @@ def _txin_sig_digest(
 
 
 class SaplingHasher:
-    """
-    Empty Sapling bundle hasher.
-    """
+    """Empty Sapling bundle hasher."""
 
     def digest(self) -> bytes:
         """
         Returns `T.3: sapling_digest` field.
-
         see: https://zips.z.cash/zip-0244#t-3-sapling-digest
         """
         return blake2b(outlen=32, personal=b"ZTxIdSaplingHash").digest()
 
 
-class OrchardHasher:
-    """
-    Empty Orchard bundle hasher.
-    """
+EMPTY = object()
+ADDING_ACTIONS = object()
+FINISHED = object()
 
-    def digest(self) -> bytes:
+class OrchardHasher:
+    """Orchard bundle hasher."""
+
+    def __init__(self):
+        self.h  = HashWriter(blake2b(outlen=32, personal=b"ZTxIdOrchardHash"))
+        self.ch = HashWriter(blake2b(outlen=32, personal=b"ZTxIdOrcActCHash"))
+        self.mh = HashWriter(blake2b(outlen=32, personal=b"ZTxIdOrcActMHash"))
+        self.nh = HashWriter(blake2b(outlen=32, personal=b"ZTxIdOrcActNHash"))
+        self.state = EMPTY
+
+    def add_action(self, action):
+        assert self.state in (EMPTY, ADDING_ACTIONS)
+        self.state = ADDING_ACTIONS
+
+        write_bytes_fixed(self.ch, action["nf"], 32)                       # T.4a.i  : nullifier            (field encoding bytes)
+        write_bytes_fixed(self.ch, action["cmx"], 32)                      # T.4a.ii : cmx                  (field encoding bytes)
+        write_bytes_fixed(self.ch, action["epk"], 32)                      # T.4a.iii: ephemeralKey         (field encoding bytes)
+        write_bytes_fixed(self.ch, action["enc_ciphertext"][:52], 52)      # T.4a.iv : encCiphertext[..52]  (First 52 bytes of field encoding)
+
+        write_bytes_fixed(self.mh, action["enc_ciphertext"][52:564], 512)  # T.4b.i: encCiphertext[52..564] (contents of the encrypted memo field)
+
+        write_bytes_fixed(self.nh, action["cv"], 32)                       # T.4c.i  : cv                    (field encoding bytes)
+        write_bytes_fixed(self.nh, action["rk"], 32)                       # T.4c.ii : rk                    (field encoding bytes)
+        write_bytes_fixed(self.nh, action["enc_ciphertext"][564:], 16)     # T.4c.iii: encCiphertext[564..]  (post-memo suffix of field encoding)
+        write_bytes_fixed(self.nh, action["out_ciphertext"], 80)           # T.4c.iv : outCiphertext         (field encoding bytes)
+
+    def finalize(self, flags, value_balance, anchor):
+        assert self.state == ADDING_ACTIONS
+
+        write_bytes_fixed(self.h, self.ch.get_digest(), 32)  # T.4a: orchard_actions_compact_digest      (32-byte hash output)
+        write_bytes_fixed(self.h, self.mh.get_digest(), 32)  # T.4b: orchard_actions_memos_digest        (32-byte hash output)
+        write_bytes_fixed(self.h, self.nh.get_digest(), 32)  # T.4c: orchard_actions_noncompact_digest   (32-byte hash output)
+        write_bytes_fixed(self.h, flags, 1)                  # T.4d: flagsOrchard                        (1 byte)
+        write_sint64(     self.h, value_balance)             # T.4e: valueBalanceOrchard                 (64-bit signed little-endian)
+        write_bytes_fixed(self.h, anchor, 32)                # T.4f: anchorOrchard                       (32 bytes)
+
+        self.state = FINISHED
+
+    def digest(self):
         """
         Returns `T.4: orchard_digest` field.
-
         see: https://zips.z.cash/zip-0244#t-4-orchard-digest
         """
-        return blake2b(outlen=32, personal=b"ZTxIdOrchardHash").digest()
+        assert self.state in (EMPTY, FINISHED)
+        return self.h.get_digest()

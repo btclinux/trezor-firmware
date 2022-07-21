@@ -388,6 +388,10 @@ def sanitize_sign_tx(tx: SignTx, coin: CoinInfo) -> SignTx:
         if tx.branch_id is not None:
             raise wire.DataError("Branch ID not enabled on this coin.")
 
+    if tx.orchard is not None:
+        if tx.orchard.actions_count == 1:
+            raise wire.DataError("Zcash `action_count` must not be 1.")
+
     return tx
 
 

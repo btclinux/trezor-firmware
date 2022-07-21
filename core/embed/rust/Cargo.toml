@@ -50,6 +50,28 @@ default_features = false
 version = "0.2.4"
 default_features = false
 
+<<<<<<< HEAD
+=======
+[dependencies.f4jumble]
+version = "0.1.0"
+default-features = false
+optional = true
+
+[dependencies.pasta_curves]
+#git = "https://github.com/jarys/pasta_curves"
+#branch = "unboxed_closures"
+path = "/home/agi/code/pasta_curves"
+default-features = false
+features = ["unboxed_closures"]
+
+[dependencies.orchard]
+#git = "https://github.com/jarys/orchard"
+#branch = "alloc-3-plus"
+path = "/home/agi/code/orchard"
+default_features = false
+
+
+>>>>>>> 1a387302b (backup changes)
 # Build dependencies
 
 [build-dependencies.bindgen]

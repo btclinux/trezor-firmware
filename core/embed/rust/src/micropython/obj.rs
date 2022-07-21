@@ -382,6 +382,23 @@ impl TryFrom<Obj> for usize {
     }
 }
 
+impl<const N: usize> TryFrom<[u8; N]> for Obj {
+    type Error = Error;
+
+    fn try_from(array: [u8; N]) -> Result<Obj, Error> {
+        Ok((&array[..]).try_into()?)
+    }
+}
+
+impl<const N: usize> TryFrom<Obj> for [u8; N] {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<[u8; N], Error> {
+        let buffer: Buffer = obj.try_into()?;
+        Ok(buffer.as_ref().try_into()?)
+    }
+}
+
 impl<T> From<Option<T>> for Obj
 where
     T: Into<Obj>,

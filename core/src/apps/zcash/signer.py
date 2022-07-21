@@ -45,6 +45,14 @@ class Zcash(Bitcoinlike):
 
         super().__init__(tx, keychain, coin, approver)
 
+        self.orchard = OrchardSigner(
+            self.tx_info,
+            None, #keychain[1], # TODO
+            approver,
+            coin,
+            self.tx_req,
+        )
+
     def create_sig_hasher(self, tx: SignTx | PrevTx) -> ZcashHasher:
         return ZcashHasher(tx)
 
@@ -52,6 +60,15 @@ class Zcash(Bitcoinlike):
         # Replacement transactions are not supported
         # so this should never be called.
         raise NotImplementedError
+
+    async def step1_process_inputs(self):
+        await super().step1_process_inputs()
+        await self.orchard.process_flags()
+        await self.orchard.process_inputs()
+
+    async def step2_approve_outputs(self):
+        await super().step2_approve_outputs()
+        await self.orchard.approve_outputs()
 
     async def step3_verify_inputs(self) -> None:
         # Replacement transactions are not supported.
@@ -63,8 +80,25 @@ class Zcash(Bitcoinlike):
         await super().step3_verify_inputs()
         self.taproot_only = False  # turn off taproot behavior
 
-    async def step5_serialize_outputs(self) -> None:
+    async def step4_serialize_inputs(self):
+        # shield actions first to get a sighash
+        await self.orchard.compute_digest()
+
+        await super().step4_serialize_inputs()
+
+    async def step5_serialize_outputs(self):
+        # transparent
         await super().step5_serialize_outputs()
+
+        # Sapling
+        write_compact_size(self.serialized_tx, 0)  # nSpendsSapling
+        write_compact_size(self.serialized_tx, 0)  # nOutputsSapling
+
+        # Orchard serialization is up to the client
+
+    async def step6_sign_segwit_inputs(self):
+        # transparent inputs were signed in step 4
+        await self.orchard.sign_inputs()
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
         await self.sign_nonsegwit_bip143_input(i_sign)
@@ -109,14 +143,11 @@ class Zcash(Bitcoinlike):
         write_uint32_le(w, tx.expiry)  # expiryHeight
 
     def write_tx_footer(self, w: Writer, tx: SignTx | PrevTx) -> None:
-        # serialize Sapling bundle
-        write_compact_size(w, 0)  # nSpendsSapling
-        write_compact_size(w, 0)  # nOutputsSapling
-        # serialize Orchard bundle
-        write_compact_size(w, 0)  # nActionsOrchard
+        pass  # there is no footer for v5 Zcash transactions
 
     def output_derive_script(self, txo: TxOutput) -> bytes:
         # unified addresses
+<<<<<<< HEAD
         if txo.address is not None and txo.address[0] == "u":
             assert txo.script_type is OutputScriptType.PAYTOADDRESS
 
@@ -128,6 +159,44 @@ class Zcash(Bitcoinlike):
                 scripthash = receivers[Receiver.P2SH]
                 return scripts.output_script_p2sh(scripthash)
             raise DataError("Unified address does not include a transparent receiver.")
+=======
+        if utils.USE_ZCASH:
+            if txo.address is not None and txo.address[0] == "u":
+                assert txo.script_type is OutputScriptType.PAYTOADDRESS
+
+                receivers = addresses.decode_unified(txo.address, self.coin)
+                if Receiver.P2PKH in receivers:
+                    pubkeyhash = receivers[Receiver.P2PKH]
+                    return scripts.output_script_p2pkh(pubkeyhash)
+                if Receiver.P2SH in receivers:
+                    scripthash = receivers[Receiver.P2SH]
+                    return scripts.output_script_p2sh(scripthash)
+                raise DataError(
+                    "Unified address does not include a transparent receiver."
+                )
+>>>>>>> 1a387302b (backup changes)
 
         # transparent addresses
         return super().output_derive_script(txo)
+
+class ZcashApprover(approvers.BasicApprover):
+    def __init__(self, *args, **kwargs):
+        self.orchard_out = 0
+        super().__init__(*args, **kwargs)
+
+    """
+    def add_orchard_input(self, txi: ZcashOrchardInput) -> None:
+        self.total_in += txi.amount
+        self.orchard_ += txi.amount
+    """
+
+    def add_orchard_change_output(self, txo: ZcashOrchardOutput) -> None:
+        self.change_count += 1
+        self.total_out += txo.amount
+        self.change_out += txo.amount
+        self.orchard_out += txo.amount
+
+    async def add_orchard_external_output(self, txo: ZcashOrchardOutput) -> None:
+        self.total_out += txo.amount
+        self.orchard_out += txo.amount
+        yield UiConfirmOrchardOutput(txo)
