@@ -192,10 +192,10 @@ impl<'a> TextOverlay<'a> {
 
             for c in self.text.chars() {
                 if let Some(g) = self.font.get_glyph(c) {
-                    let w = g.get_width();
-                    let h = g.get_height();
-                    let b_x = g.get_bearing_x();
-                    let b_y = g.get_bearing_y();
+                    let w = g.width;
+                    let h = g.height;
+                    let b_x = g.bearing_x;
+                    let b_y = g.bearing_y;
 
                     if x_t >= (tot_adv + b_x)
                         && x_t < (tot_adv + b_x + w)
@@ -218,7 +218,7 @@ impl<'a> TextOverlay<'a> {
                         }
                         break;
                     }
-                    tot_adv += g.get_advance();
+                    tot_adv += g.adv;
                 }
             }
         }
@@ -601,11 +601,11 @@ pub fn get_color_table(fg_color: Color, bg_color: Color) -> [Color; 16] {
 }
 
 pub struct Glyph {
-    width: i32,
-    height: i32,
-    adv: i32,
-    bearing_x: i32,
-    bearing_y: i32,
+    pub width: i32,
+    pub height: i32,
+    pub adv: i32,
+    pub bearing_x: i32,
+    pub bearing_y: i32,
     data: &'static [u8],
 }
 
@@ -674,22 +674,6 @@ impl Glyph {
     pub fn unpack_bpp8(&self, a: i32) -> u8 {
         let c_data = self.data[a as usize];
         c_data >> 4
-    }
-
-    pub fn get_advance(&self) -> i32 {
-        self.adv
-    }
-    pub fn get_width(&self) -> i32 {
-        self.width
-    }
-    pub fn get_height(&self) -> i32 {
-        self.height
-    }
-    pub fn get_bearing_x(&self) -> i32 {
-        self.bearing_x
-    }
-    pub fn get_bearing_y(&self) -> i32 {
-        self.bearing_y
     }
 
     pub fn get_pixel_data(&self, x: i32, y: i32) -> u8 {
