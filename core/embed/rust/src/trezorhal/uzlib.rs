@@ -19,11 +19,7 @@ pub struct UzlibContext<'a, 'b> {
 
 impl<'a, 'b> UzlibContext<'a, 'b> {
     pub fn new(src: &'a [u8], use_window: bool, dest_buf: &'b mut [u8]) -> Self {
-        let window = if use_window {
-            Some([0_u8; UZLIB_WINDOW_SIZE])
-        } else {
-            None
-        };
+        let window = use_window.then(|| [0_u8; UZLIB_WINDOW_SIZE]);
 
         let mut ctx = Self {
             uncomp: uzlib_uncomp::default(),
