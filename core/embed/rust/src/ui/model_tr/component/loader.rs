@@ -136,7 +136,7 @@ impl Component for Loader {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
-        let baseline = Offset::new(bounds.width() / 2 + 1, bounds.height() - 1);
+        let baseline = bounds.bottom_center() + Offset::new(1, -1);
         self.text.place(baseline);
         self.area
     }

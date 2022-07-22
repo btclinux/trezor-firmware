@@ -114,9 +114,10 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 
     for py in area.y0..area.y1 {
         for px in area.x0..area.x1 {
-            let x = px - area.x0;
+            let p = Point::new(px, py);
+            let x = p.x - area.x0;
 
-            if px >= clamped.x0 && px < clamped.x1 && py >= clamped.y0 && py < clamped.y1 {
+            if clamped.contains(p) {
                 if x % 2 == 0 {
                     if let Ok(data) = ctx.uncompress() {
                         prev_data = data[0];
@@ -170,25 +171,24 @@ impl<'a> TextOverlay<'a> {
         }
     }
 
-    pub fn place(&mut self, baseline: Offset) {
+    pub fn place(&mut self, baseline: Point) {
         let text_width = self.font.text_width(self.text);
         let text_height = self.font.text_height();
 
-        let bl_left = baseline - Offset::x(text_width / 2);
-        let text_area_start = Point::new(0, -text_height) + bl_left;
-        let text_area_end = Point::new(text_width, 0) + bl_left;
+        let text_area_start = baseline + Offset::new(-(text_width / 2), -text_height);
+        let text_area_end = baseline + Offset::new(text_width / 2, 0);
         let area = Rect::new(text_area_start, text_area_end);
 
         self.area = area;
     }
 
-    pub fn get_pixel(&self, underlying: Option<Color>, x: i32, y: i32) -> Option<Color> {
+    pub fn get_pixel(&self, underlying: Option<Color>, p: Point) -> Option<Color> {
         let mut overlay_color = None;
 
-        if x >= self.area.x0 && x < self.area.x1 && y >= self.area.y0 && y < self.area.y1 {
+        if self.area.contains(p) {
             let mut tot_adv = 0;
-            let x_t = x - self.area.x0;
-            let y_t = y - self.area.y0;
+
+            let p_rel = Point::new(p.x - self.area.x0, p.y - self.area.y0);
 
             for c in self.text.chars() {
                 if let Some(g) = self.font.get_glyph(c) {
@@ -197,13 +197,15 @@ impl<'a> TextOverlay<'a> {
                     let b_x = g.bearing_x;
                     let b_y = g.bearing_y;
 
-                    if x_t >= (tot_adv + b_x)
-                        && x_t < (tot_adv + b_x + w)
-                        && y_t >= (h - b_y)
-                        && y_t < (b_y)
-                    {
-                        //position is for this char
-                        let overlay_data = g.get_pixel_data(x_t - tot_adv - b_x, y_t - (h - b_y));
+                    let char_area = Rect::new(
+                        Point::new(tot_adv + b_x, h - b_y),
+                        Point::new(tot_adv + b_x + w, b_y),
+                    );
+
+                    if char_area.contains(p_rel) {
+                        let p_inner = p_rel - char_area.top_left();
+
+                        let overlay_data = g.get_pixel_data(p_inner);
 
                         if overlay_data > 0 {
                             if let Some(u) = underlying {
@@ -227,30 +229,30 @@ impl<'a> TextOverlay<'a> {
     }
 }
 
-fn get_point_on_line(v0: (i32, i32), v1: (i32, i32), position: f32) -> (i32, i32) {
+fn get_point_on_line(v0: Point, v1: Point, position: f32) -> Point {
     let rel1 = position;
     let rel0 = 1_f32 - position;
 
-    (
-        ((v0.0 as f32 * rel0 + v1.0 as f32 * rel1) / 2_f32) as i32,
-        ((v0.1 as f32 * rel0 + v1.1 as f32 * rel1) / 2_f32) as i32,
+    Point::new(
+        ((v0.x as f32 * rel0 + v1.x as f32 * rel1) / 2_f32) as i32,
+        ((v0.y as f32 * rel0 + v1.y as f32 * rel1) / 2_f32) as i32,
     )
 }
 
-fn get_vector(angle: i32) -> (i32, i32) {
+fn get_vector(angle: i32) -> Point {
     // This could be replaced by (cos(angle), sin(angle)), if we allow trigonometric
     // functions. In the meantime, approximate this with predefined octagon
 
     //octagon vertices
     let v = [
-        (0, 1000),
-        (707, 707),
-        (1000, 0),
-        (707, -707),
-        (0, -1000),
-        (-707, -707),
-        (-1000, 0),
-        (-707, 707),
+        Point::new(0, 1000),
+        Point::new(707, 707),
+        Point::new(1000, 0),
+        Point::new(707, -707),
+        Point::new(0, -1000),
+        Point::new(-707, -707),
+        Point::new(-1000, 0),
+        Point::new(-707, 707),
     ];
 
     match angle % 360 {
@@ -262,19 +264,19 @@ fn get_vector(angle: i32) -> (i32, i32) {
         225..=269 => get_point_on_line(v[5], v[6], (angle - 225) as f32 / 45_f32),
         270..=314 => get_point_on_line(v[6], v[7], (angle - 270) as f32 / 45_f32),
         315..=359 => get_point_on_line(v[7], v[0], (angle - 315) as f32 / 45_f32),
-        _ => (1000, 0),
+        _ => Point::new(1000, 0),
     }
 }
 
 #[inline(always)]
-fn is_clockwise_or_equal(n_v1: (i32, i32), v2: (i32, i32)) -> bool {
-    let psize = v2.0 * n_v1.0 + v2.1 * n_v1.1;
+fn is_clockwise_or_equal(n_v1: Point, v2: Point) -> bool {
+    let psize = v2.x * n_v1.x + v2.y * n_v1.y;
     psize < 0
 }
 
 #[inline(always)]
-fn is_clockwise_or_equal_inc(n_v1: (i32, i32), v2: (i32, i32)) -> bool {
-    let psize = v2.0 * n_v1.0 + v2.1 * n_v1.1;
+fn is_clockwise_or_equal_inc(n_v1: Point, v2: Point) -> bool {
+    let psize = v2.x * n_v1.x + v2.y * n_v1.y;
     psize <= 0
 }
 
@@ -332,8 +334,8 @@ pub fn rect_rounded2_partial(
 
     if show_percent >= 100 {
         show_all = true;
-        start_vector = (0, 0);
-        end_vector = (0, 0);
+        start_vector = Point::zero();
+        end_vector = Point::zero();
     } else if show_percent > 50 {
         inverted = true;
         start_vector = get_vector(end);
@@ -343,19 +345,16 @@ pub fn rect_rounded2_partial(
         end_vector = get_vector(end);
     }
 
-    let n_start = (-start_vector.1, start_vector.0);
+    let n_start = Point::new(-start_vector.y, start_vector.x);
 
     for y_c in r.y0..r.y1 {
         for x_c in r.x0..r.x1 {
+            let p = Point::new(x_c, y_c);
+
             let mut icon_pixel = false;
-            if use_icon
-                && x_c >= icon_area_clamped.x0
-                && x_c < icon_area_clamped.x1
-                && y_c >= icon_area_clamped.y0
-                && y_c < icon_area_clamped.y1
-            {
-                let x_i = x_c - icon_area.x0;
-                let y_i = y_c - icon_area.y0;
+            if use_icon && icon_area_clamped.contains(p) {
+                let x_i = p.x - icon_area.x0;
+                let y_i = p.y - icon_area.y0;
 
                 let data = icon_data[(((x_i & 0xFE) + (y_i * icon_width)) / 2) as usize];
                 if (x_i & 0x01) == 0 {
@@ -366,21 +365,16 @@ pub fn rect_rounded2_partial(
                 icon_pixel = true;
             }
 
-            if x_c < clamped.x0
-                || x_c >= clamped.x1
-                || y_c < clamped.y0
-                || y_c >= clamped.y1
-                || icon_pixel
-            {
+            if !clamped.contains(p) || icon_pixel {
                 continue;
             }
 
             if !icon_pixel {
-                let y_p = -(y_c - center.y);
-                let x_p = x_c - center.x;
+                let y_p = -(p.y - center.y);
+                let x_p = p.x - center.x;
 
-                let vx = (x_p, y_p);
-                let n_vx = (-y_p, x_p);
+                let vx = Point::new(x_p, y_p);
+                let n_vx = Point::new(-y_p, x_p);
 
                 let is_past_start = is_clockwise_or_equal(n_start, vx);
                 let is_before_end = is_clockwise_or_equal_inc(n_vx, end_vector);
@@ -389,10 +383,9 @@ pub fn rect_rounded2_partial(
                     || (!inverted && (is_past_start && is_before_end))
                     || (inverted && !(is_past_start && is_before_end))
                 {
-                    let y = y_c - r.y0;
-                    let x = x_c - r.x0;
+                    let p_b = p - r.top_left();
                     let c =
-                        rect_rounded2_get_pixel(x, y, r.width(), r.height(), colortable, false, 2);
+                        rect_rounded2_get_pixel(p_b, r.width(), r.height(), colortable, false, 2);
                     pixeldata(c);
                 } else {
                     pixeldata(bg_color);
@@ -405,30 +398,29 @@ pub fn rect_rounded2_partial(
 }
 
 pub fn rect_rounded2_get_pixel(
-    x: i32,
-    y: i32,
+    p: Offset,
     w: i32,
     h: i32,
     colortable: [Color; 16],
     fill: bool,
     line_width: i32,
 ) -> Color {
-    let border = (x >= 0 && x < line_width)
-        || ((x >= w - line_width) && x <= (w - 1))
-        || (y >= 0 && y < line_width)
-        || ((y >= h - line_width) && y <= (h - 1));
+    let border = (p.x >= 0 && p.x < line_width)
+        || ((p.x >= w - line_width) && p.x <= (w - 1))
+        || (p.y >= 0 && p.y < line_width)
+        || ((p.y >= h - line_width) && p.y <= (h - 1));
 
     let corner_lim = 2 * line_width;
     let corner_inner = line_width;
 
-    let corner_all = ((x > w - (corner_lim + 1)) || x < corner_lim)
-        && (y < corner_lim || y > h - (corner_lim + 1));
+    let corner_all = ((p.x > w - (corner_lim + 1)) || p.x < corner_lim)
+        && (p.y < corner_lim || p.y > h - (corner_lim + 1));
 
     let corner = corner_all
-        && (y >= corner_inner)
-        && (x >= corner_inner)
-        && (y <= h - (corner_inner + 1))
-        && (x <= w - (corner_inner + 1));
+        && (p.y >= corner_inner)
+        && (p.x >= corner_inner)
+        && (p.y <= h - (corner_inner + 1))
+        && (p.x <= w - (corner_inner + 1));
 
     let corner_out = corner_all && !corner;
 
@@ -455,19 +447,20 @@ pub fn bar_with_text_and_fill(
 
     for y_c in clamped.y0..clamped.y1 {
         for x_c in clamped.x0..clamped.x1 {
-            let y = y_c - r.y0;
-            let x = x_c - r.x0;
+            let p = Point::new(x_c, y_c);
+            let r_offset = p - r.top_left();
 
-            let filled =
-                (x >= fill_from && fill_from >= 0 && (x <= fill_to || fill_to < fill_from))
-                    || (x < fill_to && fill_to >= 0);
+            let filled = (r_offset.x >= fill_from
+                && fill_from >= 0
+                && (r_offset.x <= fill_to || fill_to < fill_from))
+                || (r_offset.x < fill_to && fill_to >= 0);
 
             let underlying_color =
-                rect_rounded2_get_pixel(x, y, r.width(), r.height(), colortable, filled, 1);
+                rect_rounded2_get_pixel(r_offset, r.width(), r.height(), colortable, filled, 1);
 
             let mut overlay_color = None;
             if let Some(o) = overlay {
-                overlay_color = o.get_pixel(None, x, y);
+                overlay_color = o.get_pixel(None, p);
             }
 
             let mut final_color = underlying_color;
@@ -644,12 +637,11 @@ impl Glyph {
 
         set_window(window);
 
-        for i in window.y0..window.y1 {
-            for j in window.x0..window.x1 {
-                let rx = j - pos_adj.x;
-                let ry = i - pos_adj.y;
-
-                let c = self.get_pixel_data(rx, ry);
+        for y in window.y0..window.y1 {
+            for x in window.x0..window.x1 {
+                let p = Point::new(x, y);
+                let r = p - pos_adj;
+                let c = self.get_pixel_data(r);
                 pixeldata(colortable[c as usize]);
             }
         }
@@ -676,8 +668,8 @@ impl Glyph {
         c_data >> 4
     }
 
-    pub fn get_pixel_data(&self, x: i32, y: i32) -> u8 {
-        let a = x + y * self.width;
+    pub fn get_pixel_data(&self, p: Offset) -> u8 {
+        let a = p.x + p.y * self.width;
 
         match constant::FONT_BPP {
             1 => self.unpack_bpp1(a),
