@@ -190,7 +190,7 @@ impl<'a> TextOverlay<'a> {
 
             let p_rel = Point::new(p.x - self.area.x0, p.y - self.area.y0);
 
-            for c in self.text.chars() {
+            for c in self.text.bytes() {
                 if let Some(g) = self.font.get_glyph(c) {
                     let w = g.width;
                     let h = g.height;
@@ -705,8 +705,8 @@ impl Font {
         constant::LINE_SPACE + self.text_height()
     }
 
-    pub fn get_glyph(self, ch: char) -> Option<Glyph> {
-        let gl_data = display::get_char_glyph(ch, self.0);
+    pub fn get_glyph(self, char_byte: u8) -> Option<Glyph> {
+        let gl_data = display::get_char_glyph(char_byte, self.0);
 
         if gl_data.is_null() {
             return None;
@@ -717,7 +717,7 @@ impl Font {
     pub fn display_text(self, text: &str, baseline: Point, fg_color: Color, bg_color: Color) {
         let colortable = get_color_table(fg_color, bg_color);
         let mut adv_total = 0;
-        for c in text.chars() {
+        for c in text.bytes() {
             let g = self.get_glyph(c);
             if let Some(gly) = g {
                 let adv = gly.print(baseline + Offset::new(adv_total, 0), colortable);
