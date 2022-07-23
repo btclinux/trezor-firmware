@@ -297,28 +297,28 @@ impl Rect {
         self.split_left(self.width() - width)
     }
 
+    const fn _max(a: i32, b: i32) -> i32 {
+        if a > b {
+            a
+        } else {
+            b
+        }
+    }
+
+    const fn _min(a: i32, b: i32) -> i32 {
+        if a < b {
+            a
+        } else {
+            b
+        }
+    }
+
     pub const fn clamp(self, limit: Rect) -> Self {
         Self {
-            x0: if self.x0 > limit.x0 {
-                self.x0
-            } else {
-                limit.x0
-            }, //max
-            y0: if self.y0 > limit.y0 {
-                self.y0
-            } else {
-                limit.y0
-            }, //max
-            x1: if self.x1 > limit.x1 {
-                limit.x1
-            } else {
-                self.x1
-            }, //min
-            y1: if self.y1 > limit.y1 {
-                limit.y1
-            } else {
-                self.y1
-            }, //min
+            x0: Rect::_max(self.x0, limit.x0),
+            y0: Rect::_max(self.y0, limit.y0),
+            x1: Rect::_min(self.x1, limit.x1),
+            y1: Rect::_min(self.y1, limit.y1),
         }
     }
 
