@@ -101,6 +101,11 @@ impl Point {
     pub fn center(self, rhs: Self) -> Self {
         Self::new((self.x + rhs.x) / 2, (self.y + rhs.y) / 2)
     }
+
+    /// Print the attributes for debugging purposes.
+    pub fn print(&self) {
+        println!("Point:: x: ", inttostr!(self.x), ", y: ", inttostr!(self.y));
+    }
 }
 
 impl Add<Offset> for Point {
@@ -180,6 +185,20 @@ impl Rect {
     pub fn with_width(self, width: i32) -> Self {
         self.with_size(Offset::new(width, self.height()))
     }
+    /// Print the attributes for debugging purposes.
+    pub fn print(&self) {
+        println!(
+            "Rect:: x0: ",
+            inttostr!(self.x0),
+            ", y0: ",
+            inttostr!(self.y0),
+            ", x1: ",
+            inttostr!(self.x1),
+            ", y1: ",
+            inttostr!(self.y1)
+        );
+    }
+
 
     pub fn with_height(self, height: i32) -> Self {
         self.with_size(Offset::new(self.width(), height))
