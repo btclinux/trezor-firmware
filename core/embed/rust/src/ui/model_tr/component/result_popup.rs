@@ -3,10 +3,10 @@ use crate::{
     ui::{
         component::{
             text::{layout::DefaultTextTheme, paragraphs::Paragraphs},
-            Child, Component, ComponentExt, Event, EventCtx,
+            Child, Component, ComponentExt, Event, EventCtx, Label, LabelStyle,
         },
-        display::{self, Color, Font},
-        geometry::{LinearPlacement, Offset, Point, Rect},
+        display::{Color, Font},
+        geometry::{Alignment, LinearPlacement, Offset, Point, Rect},
         model_tr::{
             component::{Button, ButtonMsg, ButtonPos, ResultAnim, ResultAnimMsg},
             theme,
@@ -15,7 +15,7 @@ use crate::{
     },
 };
 
-pub enum ResultPopupMessage {
+pub enum ResultPopupMsg {
     Confirmed,
 }
 
@@ -30,7 +30,7 @@ pub struct ResultPopup {
     state: State,
     result_anim: Child<ResultAnim>,
     headline_baseline: Point,
-    headline: Option<&'static str>,
+    headline: Option<Label<&'static str>>,
     text: Child<Paragraphs<&'static str>>,
     button: Option<Child<Button<&'static str>>>,
     autoclose: bool,
@@ -72,11 +72,17 @@ impl ResultPopup {
             ))
         });
 
+        let headline_style = LabelStyle {
+            background_color: theme::BG,
+            text_color: theme::FG,
+            font: FONT_BOLD,
+        };
+
         Self {
             area: Rect::zero(),
             state: State::Initial,
             result_anim: Child::new(ResultAnim::new(icon)),
-            headline,
+            headline: headline.map(|a| Label::new(a, Alignment::Center, headline_style)),
             headline_baseline: Point::zero(),
             text: Child::new(p1),
             button,
@@ -89,22 +95,28 @@ impl ResultPopup {
         self.autoclose = true;
     }
 
-    pub fn reset(&mut self, ctx: &mut EventCtx) {
-        self.state = State::Initial;
-        ctx.request_anim_frame();
+    pub fn start(&mut self, ctx: &mut EventCtx) {
+        self.state = State::Animating;
         self.text.request_complete_repaint(ctx);
+
+        if let Some(h) = self.headline.as_mut() {
+            h.request_complete_repaint(ctx)
+        }
 
         if let Some(b) = self.button.as_mut() {
             b.request_complete_repaint(ctx)
         }
 
-        self.result_anim.request_complete_repaint(ctx);
+        self.result_anim.mutate(ctx, |ctx, c| {
+            let now = Instant::now();
+            c.start_growing(ctx, now);
+        });
         ctx.request_paint();
     }
 }
 
 impl Component for ResultPopup {
-    type Msg = ResultPopupMessage;
+    type Msg = ResultPopupMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
@@ -152,6 +164,12 @@ impl Component for ResultPopup {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let mut button_confirmed = false;
 
+        self.text.event(ctx, event);
+
+        if let Some(h) = self.headline.as_mut() {
+            h.event(ctx, event);
+        }
+
         if let Some(b) = self.button.as_mut() {
             if let Some(ButtonMsg::Clicked) = b.event(ctx, event) {
                 button_confirmed = true;
@@ -159,22 +177,14 @@ impl Component for ResultPopup {
         };
 
         if let Some(ResultAnimMsg::FullyGrown) = self.result_anim.event(ctx, event) {
+            self.state = State::AnimationDone;
             if self.button.is_none() || self.autoclose {
-                return Some(ResultPopupMessage::Confirmed);
+                return Some(ResultPopupMsg::Confirmed);
             }
         }
 
         if button_confirmed {
-            return Some(ResultPopupMessage::Confirmed);
-        }
-
-        if let State::Initial = self.state {
-            self.state = State::Animating;
-
-            self.result_anim.mutate(ctx, |ctx, c| {
-                let now = Instant::now();
-                c.start_growing(ctx, now);
-            });
+            return Some(ResultPopupMsg::Confirmed);
         }
 
         None
@@ -187,8 +197,8 @@ impl Component for ResultPopup {
             b.paint();
         }
 
-        if let Some(t) = self.headline {
-            display::text_center(self.headline_baseline, t, FONT_BOLD, theme::FG, theme::BG);
+        if let Some(h) = self.headline.as_mut() {
+            h.paint();
         }
 
         self.result_anim.paint();
@@ -199,13 +209,10 @@ impl Component for ResultPopup {
 impl crate::trace::Trace for ResultPopup {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
         d.open("ResultPopup");
-
-        if let Some(b) = self.button.as_ref() {
-            b.trace(d);
-        }
-
-        self.result_anim.trace(d);
         self.text.trace(d);
+        self.button.trace(d);
+        //self.headline.trace(d);
+        self.result_anim.trace(d);
         d.close();
     }
 }

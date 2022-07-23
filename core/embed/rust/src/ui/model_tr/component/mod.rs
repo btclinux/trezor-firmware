@@ -16,4 +16,4 @@ pub use frame::Frame;
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use page::ButtonPage;
 pub use result_anim::{ResultAnim, ResultAnimMsg};
-pub use result_popup::{ResultPopup, ResultPopupMessage};
+pub use result_popup::{ResultPopup, ResultPopupMsg};
