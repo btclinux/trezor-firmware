@@ -615,13 +615,22 @@ impl Glyph {
         unsafe {
             let width = *data.offset(0) as i32;
             let height = *data.offset(1) as i32;
+
+            let data_bits = constant::FONT_BPP * width * height;
+
+            let data_bytes = if data_bits % 8 == 0 {
+                data_bits / 8
+            } else {
+                (data_bits / 8) + 1
+            };
+
             Glyph {
                 width,
                 height,
                 adv: *data.offset(2) as i32,
                 bearing_x: *data.offset(3) as i32,
                 bearing_y: *data.offset(4) as i32,
-                data: slice::from_raw_parts(data.offset(5), (width * height) as usize),
+                data: slice::from_raw_parts(data.offset(5), data_bytes as usize),
             }
         }
     }
