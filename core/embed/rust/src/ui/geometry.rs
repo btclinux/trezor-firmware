@@ -185,6 +185,11 @@ impl Rect {
     pub fn with_width(self, width: i32) -> Self {
         self.with_size(Offset::new(width, self.height()))
     }
+
+    pub fn with_height(self, height: i32) -> Self {
+        self.with_size(Offset::new(self.width(), height))
+    }
+
     /// Print the attributes for debugging purposes.
     pub fn print(&self) {
         println!(
@@ -197,11 +202,6 @@ impl Rect {
             ", y1: ",
             inttostr!(self.y1)
         );
-    }
-
-
-    pub fn with_height(self, height: i32) -> Self {
-        self.with_size(Offset::new(self.width(), height))
     }
 
     pub fn width(&self) -> i32 {
@@ -240,6 +240,14 @@ impl Rect {
         self.bottom_left().center(self.bottom_right())
     }
 
+    pub fn left_center(&self) -> Point {
+        self.bottom_left().center(self.top_left())
+    }
+
+    pub fn right_center(&self) -> Point {
+        self.bottom_right().center(self.top_right())
+    }
+
     pub fn contains(&self, point: Point) -> bool {
         point.x >= self.x0 && point.x < self.x1 && point.y >= self.y0 && point.y < self.y1
     }
@@ -276,6 +284,24 @@ impl Rect {
             x0: self.x1 - width,
             y0: self.y0,
             x1: self.x1,
+            y1: self.y1,
+        }
+    }
+
+    pub fn extend_left(&self, width: i32) -> Self {
+        Self {
+            x0: self.x0 - width,
+            y0: self.y0,
+            x1: self.x1,
+            y1: self.y1,
+        }
+    }
+
+    pub fn extend_right(&self, width: i32) -> Self {
+        Self {
+            x0: self.x0,
+            y0: self.y0,
+            x1: self.x1 + width,
             y1: self.y1,
         }
     }

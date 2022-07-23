@@ -15,6 +15,8 @@ use crate::{
     },
 };
 
+use super::ButtonStyleSheet;
+
 pub enum ResultPopupMessage {
     Confirmed,
 }
@@ -65,10 +67,11 @@ impl ResultPopup {
             .with_placement(LinearPlacement::vertical().align_at_start());
 
         let button = button_text.map(|t| {
+            // TODO: use `ButtonController` for this
             Child::new(Button::with_text(
                 ButtonPos::Right,
                 t,
-                theme::button_default(),
+                ButtonStyleSheet::default(true, false, None),
             ))
         });
 
