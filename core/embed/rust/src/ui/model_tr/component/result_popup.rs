@@ -3,10 +3,11 @@ use crate::{
     ui::{
         component::{
             text::{layout::DefaultTextTheme, paragraphs::Paragraphs},
-            Child, Component, ComponentExt, Event, EventCtx, Label, LabelStyle,
+            Child, Component, ComponentExt, Event, EventCtx, Label, LabelStyle, Pad,
         },
+        constant::screen,
         display::{Color, Font},
-        geometry::{Alignment, LinearPlacement, Offset, Point, Rect},
+        geometry::{Alignment, Insets, LinearPlacement, Point, Rect},
         model_tr::{
             component::{Button, ButtonMsg, ButtonPos, ResultAnim, ResultAnimMsg},
             theme,
@@ -27,6 +28,7 @@ pub enum State {
 
 pub struct ResultPopup {
     area: Rect,
+    pad: Pad,
     state: State,
     result_anim: Child<ResultAnim>,
     headline_baseline: Point,
@@ -53,6 +55,13 @@ impl DefaultTextTheme for MessageText {
     const MONO_FONT: Font = theme::FONT_MONO;
 }
 
+const ANIM_SIZE: i32 = 18;
+const BUTTON_HEIGHT: i32 = 13;
+const ANIM_SPACE: i32 = 11;
+const ANIM_POS: i32 = 32;
+const ANIM_POS_ADJ_HEADLINE: i32 = 10;
+const ANIM_POS_ADJ_BUTTON: i32 = 6;
+
 impl ResultPopup {
     pub fn new(
         icon: &'static [u8],
@@ -62,7 +71,7 @@ impl ResultPopup {
     ) -> Self {
         let p1 = Paragraphs::new()
             .add::<TRDefaultText>(FONT_MEDIUM, text)
-            .with_placement(LinearPlacement::vertical().align_at_start());
+            .with_placement(LinearPlacement::vertical().align_at_center());
 
         let button = button_text.map(|t| {
             Child::new(Button::with_text(
@@ -78,8 +87,12 @@ impl ResultPopup {
             font: FONT_BOLD,
         };
 
+        let mut pad = Pad::with_background(theme::BG);
+        pad.clear();
+
         Self {
             area: Rect::zero(),
+            pad,
             state: State::Initial,
             result_anim: Child::new(ResultAnim::new(icon)),
             headline: headline.map(|a| Label::new(a, Alignment::Center, headline_style)),
@@ -121,42 +134,40 @@ impl Component for ResultPopup {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
 
-        let button_area_start = bounds.y1 - 13;
-        let mut text_start = bounds.y0 + 64;
-        let mut text_end = bounds.y1;
+        let anim_margins = (screen().width() - ANIM_SIZE) / 2;
+        let mut anim_adjust = 0;
+        let mut headline_height = 0;
+        let mut button_height = 0;
 
-        let mut anim_pos_y = bounds.y0 + 36;
-
-        if let Some(b) = self.button.as_mut() {
-            let b_pos = Rect::new(
-                Point::new(bounds.x0, button_area_start),
-                Point::new(bounds.x1, bounds.y1),
-            );
-            b.place(b_pos);
-
-            text_start = bounds.y0 + 58;
-            text_end = button_area_start;
-            anim_pos_y = bounds.y0 + 30;
-        };
-
-        if self.headline.is_some() {
-            self.headline_baseline = Point::new(
-                self.area.center().x,
-                self.area.x0 + 54 + 16 - ((16 - FONT_BOLD.text_height()) / 2),
-            );
-            text_start = bounds.y0 + 74;
-            anim_pos_y = bounds.y0 + 26;
+        if let Some(h) = self.headline.as_mut() {
+            headline_height = h.size().y;
+            anim_adjust += ANIM_POS_ADJ_HEADLINE;
+        }
+        if self.button.is_some() {
+            button_height = BUTTON_HEIGHT;
+            anim_adjust += ANIM_POS_ADJ_BUTTON;
         }
 
-        self.text.place(Rect::new(
-            Point::new(bounds.x0, text_start),
-            Point::new(bounds.x1, text_end),
-        ));
+        let (_, rest) = bounds.split_top(ANIM_POS - anim_adjust);
+        let (anim, rest) = rest.split_top(ANIM_SIZE);
+        let (_, rest) = rest.split_top(ANIM_SPACE);
+        let (headline, rest) = rest.split_top(headline_height);
+        let (text, buttons) = rest.split_bottom(button_height);
 
-        self.result_anim.place(Rect::from_center_and_size(
-            Point::new(bounds.center().x, anim_pos_y),
-            Offset::new(18, 18),
-        ));
+        self.pad.place(bounds);
+
+        if let Some(b) = self.button.as_mut() {
+            b.place(buttons);
+        };
+
+        if let Some(h) = self.headline.as_mut() {
+            h.place(headline);
+        }
+
+        self.text.place(text);
+
+        self.result_anim
+            .place(anim.inset(Insets::sides(anim_margins)));
 
         self.area
     }
@@ -191,6 +202,7 @@ impl Component for ResultPopup {
     }
 
     fn paint(&mut self) {
+        self.pad.paint();
         self.text.paint();
 
         if let Some(b) = self.button.as_mut() {
