@@ -3,7 +3,6 @@ use crate::{
     error::Error,
     time::Duration,
     trezorhal::{display, qr, time, uzlib},
-    ui::model_tr::theme,
 };
 use core::cmp::{max, min};
 
@@ -206,7 +205,7 @@ pub fn rect_outline_rounded2(r: Rect, fg_color: Color, bg_color: Color) {
 
     // BG - delete three points around each corner.
     // Do it only for black background. No need on white.
-    if bg_color == theme::BG {
+    if bg_color == Color::black() {
         let bg_corners = [
             r.top_left(),
             r.top_left() + Offset::x(1),
@@ -874,6 +873,14 @@ impl Color {
 
     pub fn negate(self) -> Self {
         Self(!self.0)
+    }
+
+    pub const fn white() -> Self {
+        Self::rgb(255, 255, 255)
+    }
+
+    pub const fn black() -> Self {
+        Self::rgb(0, 0, 0)
     }
 }
 
