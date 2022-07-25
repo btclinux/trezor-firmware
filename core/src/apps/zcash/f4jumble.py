@@ -35,7 +35,7 @@ def H_round(i: int, left: memoryview, right: memoryview) -> None:
 
 
 def f4jumble(message: memoryview) -> None:
-    assert len(message) >= 22
+    assert 48 <= len(message) <= 4194368
     left_length = min(HASH_LENGTH, len(message) // 2)
 
     left = message[:left_length]
@@ -47,7 +47,7 @@ def f4jumble(message: memoryview) -> None:
 
 
 def f4unjumble(message: memoryview) -> None:
-    assert len(message) >= 22
+    assert 48 <= len(message) <= 4194368
     left_length = min(HASH_LENGTH, len(message) // 2)
 
     left = message[:left_length]
