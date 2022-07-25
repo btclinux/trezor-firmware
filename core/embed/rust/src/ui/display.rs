@@ -2,6 +2,7 @@ use super::constant;
 use crate::{
     time::Duration,
     trezorhal::{display, display::get_offset, time, uzlib},
+    ui::lerp::Lerp,
 };
 use core::slice;
 
@@ -209,10 +210,10 @@ impl<'a> TextOverlay<'a> {
 
                         if overlay_data > 0 {
                             if let Some(u) = underlying {
-                                overlay_color = Some(interpolate_colors(
+                                overlay_color = Some(Color::lerp(
                                     self.colortable[15],
                                     u,
-                                    overlay_data as u16,
+                                    overlay_data as f32 / 15_f32,
                                 ));
                             } else {
                                 overlay_color = Some(self.colortable[overlay_data as usize]);
@@ -227,16 +228,6 @@ impl<'a> TextOverlay<'a> {
 
         overlay_color
     }
-}
-
-fn get_point_on_line(v0: Point, v1: Point, position: f32) -> Point {
-    let rel1 = position;
-    let rel0 = 1_f32 - position;
-
-    Point::new(
-        ((v0.x as f32 * rel0 + v1.x as f32 * rel1) / 2_f32) as i32,
-        ((v0.y as f32 * rel0 + v1.y as f32 * rel1) / 2_f32) as i32,
-    )
 }
 
 fn get_vector(angle: i32) -> Point {
@@ -256,14 +247,14 @@ fn get_vector(angle: i32) -> Point {
     ];
 
     match angle % 360 {
-        0..=44 => get_point_on_line(v[0], v[1], (angle) as f32 / 45_f32),
-        45..=89 => get_point_on_line(v[1], v[2], (angle - 45) as f32 / 45_f32),
-        90..=134 => get_point_on_line(v[2], v[3], (angle - 90) as f32 / 45_f32),
-        135..=179 => get_point_on_line(v[3], v[4], (angle - 135) as f32 / 45_f32),
-        180..=224 => get_point_on_line(v[4], v[5], (angle - 180) as f32 / 45_f32),
-        225..=269 => get_point_on_line(v[5], v[6], (angle - 225) as f32 / 45_f32),
-        270..=314 => get_point_on_line(v[6], v[7], (angle - 270) as f32 / 45_f32),
-        315..=359 => get_point_on_line(v[7], v[0], (angle - 315) as f32 / 45_f32),
+        0..=44 => Point::lerp(v[0], v[1], (angle) as f32 / 45_f32),
+        45..=89 => Point::lerp(v[1], v[2], (angle - 45) as f32 / 45_f32),
+        90..=134 => Point::lerp(v[2], v[3], (angle - 90) as f32 / 45_f32),
+        135..=179 => Point::lerp(v[3], v[4], (angle - 135) as f32 / 45_f32),
+        180..=224 => Point::lerp(v[4], v[5], (angle - 180) as f32 / 45_f32),
+        225..=269 => Point::lerp(v[5], v[6], (angle - 225) as f32 / 45_f32),
+        270..=314 => Point::lerp(v[6], v[7], (angle - 270) as f32 / 45_f32),
+        315..=359 => Point::lerp(v[7], v[0], (angle - 315) as f32 / 45_f32),
         _ => Point::new(1000, 0),
     }
 }
@@ -576,18 +567,11 @@ pub fn set_window(window: Rect) {
     );
 }
 
-pub fn interpolate_colors(color0: Color, color1: Color, step: u16) -> Color {
-    let cr: u16 = ((color0.r() as u16) * step + (color1.r() as u16) * (15 - step)) / 15;
-    let cg: u16 = ((color0.g() as u16) * step + (color1.g() as u16) * (15 - step)) / 15;
-    let cb: u16 = ((color0.b() as u16) * step + (color1.b() as u16) * (15 - step)) / 15;
-    Color::rgb(cr as u8, cg as u8, cb as u8)
-}
-
 pub fn get_color_table(fg_color: Color, bg_color: Color) -> [Color; 16] {
     let mut table: [Color; 16] = [Color::from_u16(0); 16];
 
     for (i, item) in table.iter_mut().enumerate() {
-        *item = interpolate_colors(fg_color, bg_color, i as u16);
+        *item = Color::lerp(bg_color, fg_color, i as f32 / 15_f32);
     }
 
     table
@@ -769,6 +753,15 @@ impl Color {
 
     pub fn negate(self) -> Self {
         Self(!self.0)
+    }
+}
+
+impl Lerp for Color {
+    fn lerp(a: Self, b: Self, t: f32) -> Self {
+        let r = u8::lerp(a.r(), b.r(), t);
+        let g = u8::lerp(a.g(), b.g(), t);
+        let b = u8::lerp(a.b(), b.b(), t);
+        Color::rgb(r, g, b)
     }
 }
 
