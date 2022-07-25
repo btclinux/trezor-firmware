@@ -109,9 +109,7 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     set_window(clamped);
 
     let mut dest = [0_u8; 1];
-    let mut ctx = uzlib::UzlibContext::new(&data[12..], true, &mut dest);
-
-    let mut prev_data = 0;
+    let mut ctx = uzlib::UzlibContext::new(&data[12..], true);
 
     for py in area.y0..area.y1 {
         for px in area.x0..area.x1 {
@@ -120,17 +118,19 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 
             if clamped.contains(p) {
                 if x % 2 == 0 {
-                    if let Ok(data) = ctx.uncompress() {
-                        prev_data = data[0];
+                    if let Ok(()) = ctx.uncompress(&mut dest) {
+                    } else {
+                        return;
                     }
-                    pixeldata(colortable[(prev_data >> 4) as usize]);
+                    pixeldata(colortable[(dest[0] >> 4) as usize]);
                 } else {
-                    pixeldata(colortable[(prev_data & 0xF) as usize]);
+                    pixeldata(colortable[(dest[0] & 0xF) as usize]);
                 }
             } else if x % 2 == 0 {
                 //continue unzipping but dont write to display
-                if let Ok(data) = ctx.uncompress() {
-                    prev_data = data[0];
+                if let Ok(()) = ctx.uncompress(&mut dest) {
+                } else {
+                    return;
                 }
             }
         }
@@ -306,8 +306,11 @@ pub fn rect_rounded2_partial(
             );
             icon_area_clamped = icon_area.clamp(constant::screen());
 
-            let mut ctx = uzlib::UzlibContext::new(&i.0[12..], false, &mut icon_data);
-            if let Ok(_data) = ctx.uncompress() {};
+            let mut ctx = uzlib::UzlibContext::new(&i.0[12..], false);
+            if let Ok(()) = ctx.uncompress(&mut icon_data) {
+            } else {
+                return;
+            }
             icon_colortable = get_color_table(i.1, bg_color);
             icon_width = toif_info.width.into();
             use_icon = true;

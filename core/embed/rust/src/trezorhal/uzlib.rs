@@ -10,29 +10,25 @@ impl Default for ffi::uzlib_uncomp {
     }
 }
 
-pub struct UzlibContext<'a, 'b> {
+pub struct UzlibContext<'a> {
     uncomp: ffi::uzlib_uncomp,
     src_data: PhantomData<&'a [u8]>,
     window: Option<[u8; UZLIB_WINDOW_SIZE]>,
-    dest_buf: &'b mut [u8],
 }
 
-impl<'a, 'b> UzlibContext<'a, 'b> {
-    pub fn new(src: &'a [u8], use_window: bool, dest_buf: &'b mut [u8]) -> Self {
+impl<'a> UzlibContext<'a> {
+    pub fn new(src: &'a [u8], use_window: bool) -> Self {
         let window = use_window.then(|| [0_u8; UZLIB_WINDOW_SIZE]);
 
         let mut ctx = Self {
             uncomp: uzlib_uncomp::default(),
             src_data: Default::default(),
             window,
-            dest_buf,
         };
 
         unsafe {
             ctx.uncomp.source = src.as_ptr();
             ctx.uncomp.source_limit = src.as_ptr().add(src.len());
-            ctx.uncomp.dest = ctx.dest_buf.as_mut_ptr();
-            ctx.uncomp.dest_limit = ctx.dest_buf.as_mut_ptr().add(ctx.dest_buf.len());
 
             if let Some(w) = ctx.window {
                 ffi::uzlib_uncompress_init(&mut ctx.uncomp, w.as_ptr() as _, w.len() as u32);
@@ -44,14 +40,16 @@ impl<'a, 'b> UzlibContext<'a, 'b> {
         ctx
     }
 
-    pub fn uncompress(&mut self) -> Result<&mut [u8], ()> {
-        self.uncomp.dest = self.dest_buf.as_mut_ptr();
-
+    pub fn uncompress(&mut self, dest_buf: &mut [u8]) -> Result<(), ()> {
         unsafe {
+            self.uncomp.dest = dest_buf.as_mut_ptr();
+            self.uncomp.dest_limit = self.uncomp.dest.add(dest_buf.len());
+
             let res = ffi::uzlib_uncompress(&mut self.uncomp);
 
-            if res == 0 {
-                Ok(self.dest_buf)
+            if res >= 0 {
+                // also covers 'DONE' result
+                Ok(())
             } else {
                 Err(())
             }
