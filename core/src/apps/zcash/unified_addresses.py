@@ -20,13 +20,9 @@ from .f4jumble import f4jumble, f4unjumble
 
 def receiver_length(typecode: int):
     """Byte length of a receiver."""
-    if typecode == Typecode.P2PKH:
+    if typecode in [Typecode.P2PKH, Typecode.P2SH]:
         return 20
-    if typecode == Typecode.P2SH:
-        return 20
-    if typecode == Typecode.SAPLING:
-        return 43
-    if typecode == Typecode.ORCHARD:
+    if typecode in [Typecode.SAPLING, Typecode.ORCHARD]:
         return 43
     raise ValueError
 
