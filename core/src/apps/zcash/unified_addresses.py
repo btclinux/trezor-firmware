@@ -38,7 +38,7 @@ def prefix(coin: CoinInfo):
 
 def padding(hrp: str) -> bytes:
     assert len(hrp) <= 16
-    return bytes(hrp, "utf8") + bytes(16 - len(hrp))
+    return hrp.encode() + bytes(16 - len(hrp))
 
 
 def encode(receivers: Dict[Typecode, bytes], coin: CoinInfo) -> str:
