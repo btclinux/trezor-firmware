@@ -22,11 +22,8 @@ _MEMO_TYPE_COIN_PURCHASE = const(3)
 
 
 class PaymentRequestVerifier:
-    if __debug__:
-        # secp256k1 public key of m/0h for "all all ... all" seed.
-        PUBLIC_KEY = b"\x03\x0f\xdf^(\x9bZ\xefSb\x90\x95:\xe8\x1c\xe6\x0e\x84\x1f\xf9V\xf3f\xac\x12?\xa6\x9d\xb3\xc7\x9f!\xb0"
-    else:
-        PUBLIC_KEY = b""
+    # secp256k1 public key of m/0h for "all all ... all" seed.
+    PUBLIC_KEY = b"\x03\x0f\xdf^(\x9bZ\xefSb\x90\x95:\xe8\x1c\xe6\x0e\x84\x1f\xf9V\xf3f\xac\x12?\xa6\x9d\xb3\xc7\x9f!\xb0"
 
     def __init__(
         self, msg: TxAckPaymentRequest, coin: coininfo.CoinInfo, keychain: Keychain
