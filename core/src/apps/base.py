@@ -163,6 +163,7 @@ async def handle_DoPreauthorized(
     ctx: wire.Context, msg: DoPreauthorized
 ) -> protobuf.MessageType:
     from trezor.messages import PreauthorizedRequest
+    from trezor.ui.layouts import draw_simple_text
     from apps.common import authorization
 
     if not authorization.is_set():
@@ -170,6 +171,11 @@ async def handle_DoPreauthorized(
 
     wire_types = authorization.get_wire_types()
     utils.ensure(bool(wire_types), "Unsupported preauthorization found")
+
+    if msg.WarnNoDisconnect:
+        draw_simple_text(
+            "Please wait", "CoinJoin in progress.\n\nDo not disconnect your\nTrezor."
+        )
 
     req = await ctx.call_any(PreauthorizedRequest(), *wire_types)
 

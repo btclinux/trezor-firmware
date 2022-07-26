@@ -295,7 +295,7 @@ def sign_tx(
                 setattr(signtx, name, value)
 
     if preauthorized:
-        res = client.call(messages.DoPreauthorized())
+        res = client.call(messages.DoPreauthorized(WarnNoDisconnect=True))
         if not isinstance(res, messages.PreauthorizedRequest):
             raise exceptions.TrezorException("Unexpected message")
 

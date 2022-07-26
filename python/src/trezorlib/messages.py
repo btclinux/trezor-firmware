@@ -3560,6 +3560,16 @@ class NextU2FCounter(protobuf.MessageType):
 
 class DoPreauthorized(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 84
+    FIELDS = {
+        1: protobuf.Field("WarnNoDisconnect", "bool", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        WarnNoDisconnect: Optional["bool"] = None,
+    ) -> None:
+        self.WarnNoDisconnect = WarnNoDisconnect
 
 
 class PreauthorizedRequest(protobuf.MessageType):
