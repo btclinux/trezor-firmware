@@ -230,10 +230,14 @@ impl<'a> TextOverlay<'a> {
     }
 }
 
+/// Performs a conversion from `angle` (in degrees) to a vector (`Point`)
+/// (polar to cartesian transformation)
+/// Suitable for cases where we don't care about distance, it is assumed 1000
+///
+/// The implementation could be replaced by (cos(`angle`), sin(`angle`)),
+/// if we allow trigonometric functions.
+/// In the meantime, approximate this with predefined octagon
 fn get_vector(angle: i32) -> Point {
-    // This could be replaced by (cos(angle), sin(angle)), if we allow trigonometric
-    // functions. In the meantime, approximate this with predefined octagon
-
     //octagon vertices
     let v = [
         Point::new(0, 1000),
@@ -259,18 +263,28 @@ fn get_vector(angle: i32) -> Point {
     }
 }
 
+/// Find whether vector `v2` is clockwise to another vector v1
+/// `n_v1` is counter clockwise normal vector to v1
+/// ( if v1=(x1,y1), then the counter-clockwise normal is n_v1=(-y1,x1)
 #[inline(always)]
 fn is_clockwise_or_equal(n_v1: Point, v2: Point) -> bool {
     let psize = v2.x * n_v1.x + v2.y * n_v1.y;
     psize < 0
 }
 
+/// Find whether vector v2 is clockwise or equal to another vector v1
+/// `n_v1` is counter clockwise normal vector to v1
+/// ( if v1=(x1,y1), then the counter-clockwise normal is n_v1=(-y1,x1)
 #[inline(always)]
 fn is_clockwise_or_equal_inc(n_v1: Point, v2: Point) -> bool {
     let psize = v2.x * n_v1.x + v2.y * n_v1.y;
     psize <= 0
 }
 
+/// Draw a rounded rectangle with corner radius 2
+/// Draws only a part (sector of a corresponding circe)
+/// of the rectangle according to `show_percent` argument,
+/// and optionally draw an `icon` inside
 pub fn rect_rounded2_partial(
     area: Rect,
     fg_color: Color,
@@ -391,6 +405,8 @@ pub fn rect_rounded2_partial(
     pixeldata_dirty();
 }
 
+/// Gets a color of a pixel on `p` coordinates of rounded rectangle with corner
+/// radius 2
 pub fn rect_rounded2_get_pixel(
     p: Offset,
     w: i32,
@@ -425,6 +441,11 @@ pub fn rect_rounded2_get_pixel(
     }
 }
 
+/// Draws a rounded rectangle with corner radius 2, partially filled
+/// according to `fill_from` and `fill_to` arguments.
+/// Optionally draws a text inside the rectangle and adjusts its color to match
+/// the fill. The coordinates of the text are specified in the TextOverlay
+/// struct.
 pub fn bar_with_text_and_fill(
     area: Rect,
     overlay: Option<TextOverlay>,
