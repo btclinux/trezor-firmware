@@ -80,9 +80,8 @@ class ExtendedSpendingKey:
     def clone(self) -> ExtendedSpendingKey:
         return ExtendedSpendingKey(self.sk, self.c)
 
-
+"""
 class FullViewingKey:
-    """Orchard Full Vieving Key."""
     def __init__(self, fvk: bytes):
         self.fvk = fvk
 
@@ -90,16 +89,14 @@ class FullViewingKey:
         return self.fvk
 
     def incoming_viewing_key(self, scope: Scope = Scope.EXTERNAL) -> bytes:
-        """Returns the Incoming Vieving Key."""
         return orchardlib.derive_incoming_viewing_key(self.fvk, scope)
 
     def outgoing_viewing_key(self, scope: Scope = Scope.EXTERNAL) -> bytes:
-        """Returns the Outgoing Vieving Key."""
         return orchardlib.derive_outgoing_viewing_key(self.fvk, scope)
 
     def address(self, diversifier: int = 0, scope: Scope = Scope.EXTERNAL) -> bytes:
         return orchardlib.derive_address(self.fvk, diversifier, scope)
-
+"""
 
 class OrchardKeychain(Keychain):
     def __init__(self, seed: bytes, coin: CoinInfo) -> None:
@@ -115,10 +112,10 @@ class OrchardKeychain(Keychain):
         )
 
     def derive_slip21(self, path: Slip21Path) -> Slip21Node:
-        raise NotImplementedError  # TODO ?
+        raise NotImplementedError
 
     def root_fingerprint(self) -> int:
-        raise NotImplementedError  # TODO ?
+        raise NotImplementedError
 
 
 async def get_keychain_for_coin(ctx: Context, coin: CoinInfo) -> OrchardKeychain:

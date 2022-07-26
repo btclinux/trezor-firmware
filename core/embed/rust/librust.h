@@ -19,9 +19,15 @@ mp_obj_t ui_debug_layout_type();
 #endif
 
 // Zcash
+/*
 mp_obj_t orchardlib_derive_full_viewing_key(mp_obj_t spending_key);
 mp_obj_t orchardlib_derive_incoming_viewing_key(mp_obj_t full_viewing_key, mp_obj_t scope);
 mp_obj_t orchardlib_derive_outgoing_viewing_key(mp_obj_t full_viewing_key, mp_obj_t scope);
 mp_obj_t orchardlib_derive_address(mp_obj_t full_viewing_key, mp_obj_t diversifier_index, mp_obj_t scope);
 mp_obj_t orchardlib_shield_output(mp_obj_t output_info);
 mp_obj_t orchardlib_sign(mp_obj_t spending_key, mp_obj_t alpha, mp_obj_t sighash);
+*/
+
+mp_obj_t orchardlib_to_base(mp_obj_t bytes);
+mp_obj_t orchardlib_to_scalar(mp_obj_t bytes);
+mp_obj_t orchardlib_group_hash(mp_obj_t domain, mp_obj_t message);

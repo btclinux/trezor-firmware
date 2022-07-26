@@ -15,6 +15,8 @@ mod time;
 mod trace;
 mod trezorhal;
 
+mod orchardlib;
+
 #[cfg(feature = "ui")]
 #[macro_use]
 pub mod ui;

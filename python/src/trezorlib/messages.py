@@ -559,6 +559,17 @@ class ZcashReceiverTypecode(IntEnum):
     ORCHARD = 3
 
 
+class ZcashViewingKeyScope(IntEnum):
+    EXTERNAL = 0
+    INTERNAL = 1
+
+
+class ZcashMACType(IntEnum):
+    ORCHARD_INPUT = 0
+    ORCHARD_OUTPUT = 1
+    ORCHARD_ALPHA = 2
+
+
 class BinanceGetAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 700
     FIELDS = {
@@ -1645,7 +1656,7 @@ class ZcashOrchardBundleInfo(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("outputs_count", "uint32", repeated=False, required=True),
-        2: protobuf.Field("inputs_count", "uint32", repeated=False, required=True),
+        2: protobuf.Field("action_count", "uint32", repeated=False, required=True),
         3: protobuf.Field("anchor", "bytes", repeated=False, required=True),
         4: protobuf.Field("enable_spends", "bool", repeated=False, required=False),
         5: protobuf.Field("enable_outputs", "bool", repeated=False, required=False),
@@ -1657,7 +1668,7 @@ class ZcashOrchardBundleInfo(protobuf.MessageType):
         self,
         *,
         outputs_count: "int",
-        inputs_count: "int",
+        action_count: "int",
         anchor: "bytes",
         bundle_balance: "int",
         enable_spends: Optional["bool"] = True,
@@ -1665,7 +1676,7 @@ class ZcashOrchardBundleInfo(protobuf.MessageType):
         account: Optional["int"] = 0,
     ) -> None:
         self.outputs_count = outputs_count
-        self.inputs_count = inputs_count
+        self.action_count = action_count
         self.anchor = anchor
         self.bundle_balance = bundle_balance
         self.enable_spends = enable_spends
@@ -7343,7 +7354,7 @@ class ZcashOrchardOutput(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=False),
         2: protobuf.Field("amount", "uint64", repeated=False, required=True),
-        3: protobuf.Field("memo", "bytes", repeated=False, required=False),
+        3: protobuf.Field("memo", "string", repeated=False, required=False),
     }
 
     def __init__(
@@ -7351,8 +7362,165 @@ class ZcashOrchardOutput(protobuf.MessageType):
         *,
         amount: "int",
         address: Optional["str"] = None,
-        memo: Optional["bytes"] = None,
+        memo: Optional["str"] = None,
     ) -> None:
         self.amount = amount
         self.address = address
         self.memo = memo
+
+
+class ZcashOrchardNote(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("recipient", "bytes", repeated=False, required=True),
+        2: protobuf.Field("value", "uint64", repeated=False, required=True),
+        3: protobuf.Field("rho", "bytes", repeated=False, required=True),
+        4: protobuf.Field("rseed", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        recipient: "bytes",
+        value: "int",
+        rho: "bytes",
+        rseed: "bytes",
+    ) -> None:
+        self.recipient = recipient
+        self.value = value
+        self.rho = rho
+        self.rseed = rseed
+
+
+class ZcashOrchardInput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("note", "ZcashOrchardNote", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        note: "ZcashOrchardNote",
+    ) -> None:
+        self.note = note
+
+
+class ZcashOrchardAction(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("cv", "bytes", repeated=False, required=True),
+        2: protobuf.Field("nf", "bytes", repeated=False, required=True),
+        3: protobuf.Field("rk", "bytes", repeated=False, required=True),
+        4: protobuf.Field("cmx", "bytes", repeated=False, required=True),
+        5: protobuf.Field("epk", "bytes", repeated=False, required=True),
+        6: protobuf.Field("enc_ciphertext", "bytes", repeated=False, required=True),
+        7: protobuf.Field("out_ciphertext", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        cv: "bytes",
+        nf: "bytes",
+        rk: "bytes",
+        cmx: "bytes",
+        epk: "bytes",
+        enc_ciphertext: "bytes",
+        out_ciphertext: "bytes",
+    ) -> None:
+        self.cv = cv
+        self.nf = nf
+        self.rk = rk
+        self.cmx = cmx
+        self.epk = epk
+        self.enc_ciphertext = enc_ciphertext
+        self.out_ciphertext = out_ciphertext
+
+
+class ZcashOrchardProofWitness(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("path", "bytes", repeated=False, required=False),
+        2: protobuf.Field("pos", "uint32", repeated=False, required=False),
+        3: protobuf.Field("g_d_old", "bytes", repeated=False, required=True),
+        4: protobuf.Field("pk_d_old", "bytes", repeated=False, required=True),
+        5: protobuf.Field("v_old", "uint64", repeated=False, required=True),
+        6: protobuf.Field("rho_old", "bytes", repeated=False, required=True),
+        7: protobuf.Field("psi_old", "bytes", repeated=False, required=True),
+        8: protobuf.Field("rcm_old", "bytes", repeated=False, required=True),
+        9: protobuf.Field("cm_old", "bytes", repeated=False, required=True),
+        10: protobuf.Field("alpha", "bytes", repeated=False, required=True),
+        11: protobuf.Field("ak", "bytes", repeated=False, required=True),
+        12: protobuf.Field("nk", "bytes", repeated=False, required=True),
+        13: protobuf.Field("rivk", "bytes", repeated=False, required=True),
+        14: protobuf.Field("g_d_new", "bytes", repeated=False, required=True),
+        15: protobuf.Field("pk_d_new", "bytes", repeated=False, required=True),
+        16: protobuf.Field("v_new", "uint64", repeated=False, required=True),
+        17: protobuf.Field("psi_new", "bytes", repeated=False, required=True),
+        18: protobuf.Field("rcm_new", "bytes", repeated=False, required=True),
+        19: protobuf.Field("rcv", "bytes", repeated=False, required=True),
+        20: protobuf.Field("input_index", "uint32", repeated=False, required=True),
+        21: protobuf.Field("output_index", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        g_d_old: "bytes",
+        pk_d_old: "bytes",
+        v_old: "int",
+        rho_old: "bytes",
+        psi_old: "bytes",
+        rcm_old: "bytes",
+        cm_old: "bytes",
+        alpha: "bytes",
+        ak: "bytes",
+        nk: "bytes",
+        rivk: "bytes",
+        g_d_new: "bytes",
+        pk_d_new: "bytes",
+        v_new: "int",
+        psi_new: "bytes",
+        rcm_new: "bytes",
+        rcv: "bytes",
+        input_index: "int",
+        output_index: "int",
+        path: Optional["bytes"] = None,
+        pos: Optional["int"] = None,
+    ) -> None:
+        self.g_d_old = g_d_old
+        self.pk_d_old = pk_d_old
+        self.v_old = v_old
+        self.rho_old = rho_old
+        self.psi_old = psi_old
+        self.rcm_old = rcm_old
+        self.cm_old = cm_old
+        self.alpha = alpha
+        self.ak = ak
+        self.nk = nk
+        self.rivk = rivk
+        self.g_d_new = g_d_new
+        self.pk_d_new = pk_d_new
+        self.v_new = v_new
+        self.psi_new = psi_new
+        self.rcm_new = rcm_new
+        self.rcv = rcv
+        self.input_index = input_index
+        self.output_index = output_index
+        self.path = path
+        self.pos = pos
+
+
+class ZcashSignOrchard(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("alpha", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        alpha: "bytes",
+    ) -> None:
+        self.alpha = alpha

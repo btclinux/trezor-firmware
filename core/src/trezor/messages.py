@@ -57,7 +57,9 @@ if TYPE_CHECKING:
     from trezor.enums import TezosBallotType  # noqa: F401
     from trezor.enums import TezosContractType  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
+    from trezor.enums import ZcashMACType  # noqa: F401
     from trezor.enums import ZcashReceiverTypecode  # noqa: F401
+    from trezor.enums import ZcashViewingKeyScope  # noqa: F401
 
     class BinanceGetAddress(protobuf.MessageType):
         address_n: "list[int]"
@@ -975,7 +977,7 @@ if TYPE_CHECKING:
 
     class ZcashOrchardBundleInfo(protobuf.MessageType):
         outputs_count: "int"
-        inputs_count: "int"
+        action_count: "int"
         anchor: "bytes"
         enable_spends: "bool"
         enable_outputs: "bool"
@@ -986,7 +988,7 @@ if TYPE_CHECKING:
             self,
             *,
             outputs_count: "int",
-            inputs_count: "int",
+            action_count: "int",
             anchor: "bytes",
             bundle_balance: "int",
             enable_spends: "bool | None" = None,
@@ -5842,17 +5844,145 @@ if TYPE_CHECKING:
     class ZcashOrchardOutput(protobuf.MessageType):
         address: "str | None"
         amount: "int"
-        memo: "bytes | None"
+        memo: "str | None"
 
         def __init__(
             self,
             *,
             amount: "int",
             address: "str | None" = None,
-            memo: "bytes | None" = None,
+            memo: "str | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashOrchardOutput"]:
+            return isinstance(msg, cls)
+
+    class ZcashOrchardNote(protobuf.MessageType):
+        recipient: "bytes"
+        value: "int"
+        rho: "bytes"
+        rseed: "bytes"
+
+        def __init__(
+            self,
+            *,
+            recipient: "bytes",
+            value: "int",
+            rho: "bytes",
+            rseed: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashOrchardNote"]:
+            return isinstance(msg, cls)
+
+    class ZcashOrchardInput(protobuf.MessageType):
+        note: "ZcashOrchardNote"
+
+        def __init__(
+            self,
+            *,
+            note: "ZcashOrchardNote",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashOrchardInput"]:
+            return isinstance(msg, cls)
+
+    class ZcashOrchardAction(protobuf.MessageType):
+        cv: "bytes"
+        nf: "bytes"
+        rk: "bytes"
+        cmx: "bytes"
+        epk: "bytes"
+        enc_ciphertext: "bytes"
+        out_ciphertext: "bytes"
+
+        def __init__(
+            self,
+            *,
+            cv: "bytes",
+            nf: "bytes",
+            rk: "bytes",
+            cmx: "bytes",
+            epk: "bytes",
+            enc_ciphertext: "bytes",
+            out_ciphertext: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashOrchardAction"]:
+            return isinstance(msg, cls)
+
+    class ZcashOrchardProofWitness(protobuf.MessageType):
+        path: "bytes | None"
+        pos: "int | None"
+        g_d_old: "bytes"
+        pk_d_old: "bytes"
+        v_old: "int"
+        rho_old: "bytes"
+        psi_old: "bytes"
+        rcm_old: "bytes"
+        cm_old: "bytes"
+        alpha: "bytes"
+        ak: "bytes"
+        nk: "bytes"
+        rivk: "bytes"
+        g_d_new: "bytes"
+        pk_d_new: "bytes"
+        v_new: "int"
+        psi_new: "bytes"
+        rcm_new: "bytes"
+        rcv: "bytes"
+        input_index: "int"
+        output_index: "int"
+
+        def __init__(
+            self,
+            *,
+            g_d_old: "bytes",
+            pk_d_old: "bytes",
+            v_old: "int",
+            rho_old: "bytes",
+            psi_old: "bytes",
+            rcm_old: "bytes",
+            cm_old: "bytes",
+            alpha: "bytes",
+            ak: "bytes",
+            nk: "bytes",
+            rivk: "bytes",
+            g_d_new: "bytes",
+            pk_d_new: "bytes",
+            v_new: "int",
+            psi_new: "bytes",
+            rcm_new: "bytes",
+            rcv: "bytes",
+            input_index: "int",
+            output_index: "int",
+            path: "bytes | None" = None,
+            pos: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashOrchardProofWitness"]:
+            return isinstance(msg, cls)
+
+    class ZcashSignOrchard(protobuf.MessageType):
+        alpha: "bytes"
+
+        def __init__(
+            self,
+            *,
+            alpha: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashSignOrchard"]:
             return isinstance(msg, cls)

@@ -87,4 +87,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_epk;
   MP_QSTR_enc_ciphertext;
   MP_QSTR_out_ciphertext;
+
+  // pallas
+  MP_QSTR_Fp;
+  MP_QSTR_Fq;
+  MP_QSTR_Ep;
+  MP_QSTR_hash_to_curve;
+  MP_QSTR___bytes__;
+  MP_QSTR_extract;
 }

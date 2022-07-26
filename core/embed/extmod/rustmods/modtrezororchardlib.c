@@ -19,18 +19,8 @@
 
 #include "py/runtime.h"
 
-#if USE_ZCASH
 
 #include "librust.h"
-
-/// def f4jumble(message: bytearray) -> None:
-///     """Mutates a message by F4Jumble permutation."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_f4jumble, orchardlib_f4jumble);
-
-/// def f4jumble_inv(message: bytearray) -> None:
-///     """Mutates a message by F4Jumble inverse permutation."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_f4jumble_inv,
-                                 orchardlib_f4jumble_inv);
 
 /// def derive_full_viewing_key(spending_key: bytes) -> bytes:
 /// """Returns a raw Orchard Full Viewing Key."""
@@ -88,8 +78,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_orchardlib_sign, orchardlib_sign);
 
 STATIC const mp_rom_map_elem_t mp_module_trezororchardlib_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezororchardlib)},
-    {MP_ROM_QSTR(MP_QSTR_f4jumble), MP_ROM_PTR(&mod_orchardlib_f4jumble)},
-    {MP_ROM_QSTR(MP_QSTR_f4jumble_inv), MP_ROM_PTR(&mod_orchardlib_f4jumble_inv)},
     {MP_ROM_QSTR(MP_QSTR_derive_full_viewing_key),  MP_ROM_PTR(&mod_orchardlib_derive_full_viewing_key)},
     {MP_ROM_QSTR(MP_QSTR_derive_incoming_viewing_key),  MP_ROM_PTR(&mod_orchardlib_derive_incoming_viewing_key)},
     {MP_ROM_QSTR(MP_QSTR_derive_outgoing_viewing_key),  MP_ROM_PTR(&mod_orchardlib_derive_outgoing_viewing_key)},
@@ -108,5 +96,3 @@ const mp_obj_module_t mp_module_trezororchardlib = {
 
 MP_REGISTER_MODULE(MP_QSTR_trezororchardlib, mp_module_trezororchardlib,
                    USE_ZCASH);
-
-#endif  // USE_ZCASH

@@ -18,10 +18,20 @@ enum ZcashReceiverTypecode {
 
 /**
  * Type of Orchard Viewing Key.
+ * see: https://zips.z.cash/zip-0032#key-path-levels
  */
 enum ZcashViewingKeyScope {
     EXTERNAL = 0;  // for extenal operations like receiving funds from other users
     INTERNAL = 1;  // for internal operations like change transfers
+}
+
+/**
+ * Types of MACs for Zcash messages.
+ */
+enum ZcashMACType {
+  ORCHARD_INPUT = 0;
+  ORCHARD_OUTPUT = 1;
+  ORCHARD_ALPHA = 2;
 }
 
 /**
@@ -92,18 +102,69 @@ message ZcashOrchardOutput {
     optional string address = 1;  // for outgoing transfers
     required uint64 amount = 2;
     optional string memo = 3;     // an optional message for a recepient
-    optional bytes  mac = 4;      // Message Authorization Code for resending this message 
+}
+
+message ZcashOrchardNote {
+    required bytes recipient = 1;
+    required uint64 value = 2;
+    required bytes rho = 3;
+    required bytes rseed = 4;
+    //optional bytes nullifier = 5;
+}
+
+message ZcashOrchardInput {
+    required ZcashOrchardNote note = 1;
 }
 
 /**
  * Request: Specify Orchard Action description.
  * @next TxRequest
  */
-message ZcashActionDescription {
-    required bytes nf = 1;  // nullifier
-    required bytes cv = 2;  // value commitment
-    required bytes rk = 3;  // verification key
+/*message ZcashActionDescription {
+    required bytes nf = 1;     // nullifier of spent Note
+    required bytes cv = 2;     // value commitment
+    required bytes rk = 3;     // verification key
     required ZcashOrchardOutput output = 4;  // Action output info
+    optional bytes output_mac = 5;
+    optional uint32 output_index = 6;
+    required bytes rseed = 7;  // rseed for an outcomming Note
+    required bytes rho = 8;    // rho for the outcoming Note
+    optional bytes c_out = 9;  // c_out for the outcoming dummy Note
+}*/
+
+message ZcashOrchardAction {
+    required bytes cv = 1;
+    required bytes nf = 2;
+    required bytes rk = 3;
+    required bytes cmx = 4;
+    required bytes epk = 5;
+    required bytes enc_ciphertext = 6;
+    required bytes out_ciphertext = 7;
+}
+
+message ZcashOrchardProofWitness {
+  optional bytes path = 1;  // from Note witness
+  optional uint32 pos = 2;  // from Note witness
+  required bytes g_d_old = 3;  // from Note
+  required bytes pk_d_old = 4;  // from Note
+  required uint64 v_old = 5;  //  from Note
+  required bytes rho_old = 6;  //from Note
+  required bytes psi_old = 7;  // from Note
+  required bytes rcm_old = 8;  // derivable
+  required bytes cm_old = 9;  // derivable
+  required bytes alpha = 10;
+  required bytes ak = 11;  // from fvk
+  required bytes nk = 12;  // from fvk
+  required bytes rivk = 13;  // from fvk
+  required bytes g_d_new = 14;   // from output
+  required bytes pk_d_new = 15;  // from output
+  required uint64 v_new = 16;  // from output
+  required bytes psi_new = 17;
+  required bytes rcm_new = 18;
+  required bytes rcv = 19;
+
+  required uint32 input_index = 20;
+  required uint32 output_index = 21;
 }
 
 /**

@@ -511,3 +511,12 @@ if TYPE_CHECKING:
         P2SH = 1
         SAPLING = 2
         ORCHARD = 3
+
+    class ZcashViewingKeyScope(IntEnum):
+        EXTERNAL = 0
+        INTERNAL = 1
+
+    class ZcashMACType(IntEnum):
+        ORCHARD_INPUT = 0
+        ORCHARD_OUTPUT = 1
+        ORCHARD_ALPHA = 2

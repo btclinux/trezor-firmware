@@ -459,8 +459,12 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.TezosBallotType
     trezor.enums.TezosContractType
     import trezor.enums.TezosContractType
+    trezor.enums.ZcashMACType
+    import trezor.enums.ZcashMACType
     trezor.enums.ZcashReceiverTypecode
     import trezor.enums.ZcashReceiverTypecode
+    trezor.enums.ZcashViewingKeyScope
+    import trezor.enums.ZcashViewingKeyScope
     trezor.ui.components.common.webauthn
     import trezor.ui.components.common.webauthn
     trezor.ui.components.tt.webauthn
@@ -779,8 +783,40 @@ if not utils.BITCOIN_ONLY:
     import apps.zcash
     apps.zcash.f4jumble
     import apps.zcash.f4jumble
+    apps.zcash.get_address
+    import apps.zcash.get_address
     apps.zcash.hasher
     import apps.zcash.hasher
+    apps.zcash.layout
+    import apps.zcash.layout
+    apps.zcash.orchard
+    import apps.zcash.orchard
+    apps.zcash.orchard.commitments
+    import apps.zcash.orchard.commitments
+    apps.zcash.orchard.generators
+    import apps.zcash.orchard.generators
+    apps.zcash.orchard.get_fvk
+    import apps.zcash.orchard.get_fvk
+    apps.zcash.orchard.get_ivk
+    import apps.zcash.orchard.get_ivk
+    apps.zcash.orchard.key_components
+    import apps.zcash.orchard.key_components
+    apps.zcash.orchard.keychain
+    import apps.zcash.orchard.keychain
+    apps.zcash.orchard.note
+    import apps.zcash.orchard.note
+    apps.zcash.orchard.note_encryption
+    import apps.zcash.orchard.note_encryption
+    apps.zcash.orchard.pallas
+    import apps.zcash.orchard.pallas
+    apps.zcash.orchard.poseidon
+    import apps.zcash.orchard.poseidon
+    apps.zcash.orchard.signer
+    import apps.zcash.orchard.signer
+    apps.zcash.orchard.sinsemilla
+    import apps.zcash.orchard.sinsemilla
+    apps.zcash.orchard.utils
+    import apps.zcash.orchard.utils
     apps.zcash.signer
     import apps.zcash.signer
     apps.zcash.unified_addresses

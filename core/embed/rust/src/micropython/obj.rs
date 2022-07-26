@@ -3,6 +3,7 @@ use core::convert::{TryFrom, TryInto};
 use cstr_core::CStr;
 
 use crate::error::Error;
+use crate::micropython::buffer::Buffer;
 
 use super::{ffi, runtime::catch_exception};
 
