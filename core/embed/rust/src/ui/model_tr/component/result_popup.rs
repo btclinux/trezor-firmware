@@ -20,16 +20,9 @@ pub enum ResultPopupMsg {
     Confirmed,
 }
 
-pub enum State {
-    Initial,
-    Animating,
-    AnimationDone,
-}
-
 pub struct ResultPopup {
     area: Rect,
     pad: Pad,
-    state: State,
     result_anim: Child<ResultAnim>,
     headline_baseline: Point,
     headline: Option<Label<&'static str>>,
@@ -93,7 +86,6 @@ impl ResultPopup {
         Self {
             area: Rect::zero(),
             pad,
-            state: State::Initial,
             result_anim: Child::new(ResultAnim::new(icon)),
             headline: headline.map(|a| Label::new(a, Alignment::Center, headline_style)),
             headline_baseline: Point::zero(),
@@ -109,7 +101,6 @@ impl ResultPopup {
     }
 
     pub fn start(&mut self, ctx: &mut EventCtx) {
-        self.state = State::Animating;
         self.text.request_complete_repaint(ctx);
 
         if let Some(h) = self.headline.as_mut() {
@@ -188,7 +179,6 @@ impl Component for ResultPopup {
         };
 
         if let Some(ResultAnimMsg::FullyGrown) = self.result_anim.event(ctx, event) {
-            self.state = State::AnimationDone;
             if self.button.is_none() || self.autoclose {
                 return Some(ResultPopupMsg::Confirmed);
             }
