@@ -1,7 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import ui
+from trezor import res, ui
 
 from ...constants import (
     PAGINATION_MARGIN_RIGHT,
@@ -362,6 +362,9 @@ if __debug__:
                 length = len(string) - start
             self.screen_contents.append(string[start : start + length])
 
+        def icon(self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) -> None:
+            pass
+
 
 class TextBase(ui.Component):
     def __init__(
@@ -534,3 +537,15 @@ def text_center_trim_right(
     ui.display.text(x, y, text[:text_length], font, ui.FG, ui.BG)
     x += text_width
     ui.display.text(x, y, "...", ui.BOLD, ui.GREY, ui.BG)
+
+
+def header(
+    title: str,
+    icon: str = ui.style.ICON_DEFAULT,
+    fg: int = ui.style.FG,
+    bg: int = ui.style.BG,
+    ifg: int = ui.style.GREEN,
+) -> None:
+    if icon is not None:
+        ui.display.icon(14, 15, res.load(icon), ifg, bg)
+    ui.display.text(44, 35, title, ui.BOLD, fg, bg)
